@@ -1,15 +1,10 @@
-from typing import List
-from Token.exporter import Token, TokenType
-
-def tokenize(programText: str) -> List[Token]:
-  print(programText)
-  return []
+from scanner import Scanner
 
 if __name__ == "__main__":
-  print("Starting ruc#")
-  x = Token(TokenType.LPeren, "oi", None, 1)
-  print(x)
+  program = "1 + (2 / 3)"
 
-  
+  scanner = Scanner(program)
+  tokens = scanner.getTokens()
 
-  
+  print(tokens)
+
