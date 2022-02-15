@@ -1,12 +1,11 @@
-from re import S
 from typing import List
 from Token.exporter import Token, TokenType
 
 
 class Scanner:
   # Source variables
-  source: str
-  tokens: List[Token]
+  source: str = ""
+  tokens: List[Token] = []
 
   # Variables to track scanner
   start: int = 0
@@ -19,7 +18,7 @@ class Scanner:
   def __isAtEnd(self) -> bool:
     return self.current >= len(self.source)
 
-  def __advance() -> str:
+  def __advance(self) -> str:
     return ""
 
   def __add_token(self, type: TokenType):
