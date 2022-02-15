@@ -1,0 +1,7 @@
+{
+  "python.analysis.typeCheckingMode": "strict",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": false,
+  "python.formatting.autopep8Args": ["--indent-size=2"],
+  "python.formatting.provider": "autopep8"
+}
