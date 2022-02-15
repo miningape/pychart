@@ -1,3 +1,6 @@
+# This file here is what sets up github to automatically test our code
+# Its almost the default one github generates
+
 # This is a basic workflow to help you get started with Actions
 
 name: Verify PR
