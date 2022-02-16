@@ -5,4 +5,4 @@ def inc(x: int) -> int:
 
 
 def test_answer():
-  assert inc(1) == 3
+  assert inc(2) == 3
