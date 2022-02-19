@@ -12,8 +12,8 @@ class Scanner:
     current: int = 0
     line: int = 1
 
-    def __init__(self, programText: str):
-        self.source = programText
+    def __init__(self, program_text: str):
+        self.source = program_text
 
     def __is_at_end(self) -> bool:
         return self.current >= len(self.source)
@@ -23,9 +23,9 @@ class Scanner:
         self.current += 1
         return char
 
-    def __add_token(self, type: TokenType, literal: Any = None):
+    def __add_token(self, token_type: TokenType, literal: Any = None):
         text = self.source[self.start : self.current]
-        self.tokens.append(Token(type, text, literal, self.line))
+        self.tokens.append(Token(token_type, text, literal, self.line))
 
     def __scan_token(self):
         char = self.__advance()
