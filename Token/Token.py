@@ -1,7 +1,6 @@
 from typing import Any
 from token.token_type_enum import TokenType
 
-
 class Token:
     token_type: TokenType
     lexeme: str

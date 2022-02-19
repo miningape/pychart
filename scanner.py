@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 from token.exporter import Token, TokenType
 
 
@@ -19,28 +19,44 @@ class Scanner:
         return self.current >= len(self.source)
 
     def __advance(self) -> str:
-        return ""
+        char = self.source[self.current]
+        self.current += 1
+        return char
 
-    def __add_token(self, type: TokenType):
-        pass
+    def __add_token(self, type: TokenType, literal: Any = None):
+        text = self.source[self.start : self.current]
+        self.tokens.append(Token(type, text, literal, self.line))
 
     def __scan_token(self):
         char = self.__advance()
 
+        # Single char tokens
         if char == "+":
             self.__add_token(TokenType.PLUS)
         elif char == "-":
             self.__add_token(TokenType.MINUS)
-        elif char == "/":
-            self.__add_token(TokenType.SLASH)
         elif char == "*":
             self.__add_token(TokenType.STAR)
+        elif char == "{":
+            self.__add_token(TokenType.LEFT_BRACE)
+        elif char == "}":
+            self.__add_token(TokenType.RIGHT_BRACE)
+        elif char == "(":
+            self.__add_token(TokenType.LEFT_PEREN)
+        elif char == ")":
+            self.__add_token(TokenType.RIGHT_PEREN)
+        elif char == ",":
+            self.__add_token(TokenType.COMMA)
+        elif char == ".":
+            self.__add_token(TokenType.DOT)
+        elif char == ";":
+            self.__add_token(TokenType.SEMICOLON)
 
     def get_tokens(self) -> List[Token]:
         if len(self.tokens) != 0:
-            return self.tokens
+            self.tokens = []
 
-      # do the tokenising
+        # do the tokenising
         while not self.__is_at_end():
             self.start = self.current
             self.__scan_token()
