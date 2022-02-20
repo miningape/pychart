@@ -6,4 +6,4 @@ def inc(number: int) -> int:
 
 
 def test_answer():
-    assert inc(2) == 3
+    assert inc(3) == 4
