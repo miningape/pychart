@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Dict, List
 from token.exporter import Token, TokenType
 
 
@@ -20,6 +20,16 @@ class Scanner:
     start: int = 0
     current: int = 0
     line: int = 1
+
+    keywords: Dict[str, TokenType] = {
+        "if": TokenType.IF,
+        "else": TokenType.ELSE,
+        "func": TokenType.FUNCTION,
+        "return": TokenType.RETURN,
+        "while": TokenType.WHILE,
+        "null": TokenType.NULL,
+        "let": TokenType.LET,
+    }
 
     def __init__(self, program_text: str):
         self.source = program_text
@@ -50,6 +60,51 @@ class Scanner:
         if self.__is_at_end():
             return "\0"
         return self.source[self.current]
+
+    def __peek_next(self) -> str:
+        if self.current + 1 >= len(self.source):
+            return "\0"
+
+        return self.source[self.current + 1]
+
+    def __string(self):
+        while self.__peek() != '"' and not self.__is_at_end():
+            if self.__peek() == "\n":
+                self.line += 1
+            self.__advance()
+
+        if self.__is_at_end():
+            pass  # Throw error -> string not ended
+
+        self.__advance()
+
+        value = self.source[self.start + 1 : self.current - 1]
+        self.__add_token(TokenType.STRING, value)
+
+    def __number(self):
+        while self.__peek().isdigit():
+            self.__advance()
+
+        if self.__peek() == "." and self.__peek_next().isdigit():
+            self.__advance()
+            while self.__peek().isdigit():
+                self.__advance()
+
+        self.__add_token(
+            TokenType.NUMBER, float(self.source[self.start : self.current])
+        )
+
+    def __identifier(self):
+        while self.__peek().isalnum():
+            self.__advance()
+
+        text = self.source[self.start : self.current]
+
+        type_of = self.keywords.get(text)
+        if type_of is None:
+            type_of = TokenType.IDENTIFIER
+
+        self.__add_token(type_of)
 
     def __scan_token(self):
         char = self.__advance()
@@ -111,7 +166,11 @@ class Scanner:
 
         # Literals
         elif char == '"':
-            pass  # String Literal
+            self.__string()
+        elif char.isdigit():
+            self.__number()
+        elif char.isalpha():
+            self.__identifier()
         else:
             pass  # Throw error -> unrecognised token
 
