@@ -2,9 +2,14 @@ from shutil import ExecError
 import sys
 from typing import List
 
+from scanner import Scanner
+
 
 def run(source: str):
-    print(source)
+    scanner = Scanner(source)
+    tokens = scanner.get_tokens()
+
+    print(list(map(str, tokens)))
 
 
 def run_prompt():
@@ -18,7 +23,7 @@ def run_prompt():
 
 
 def run_file(filename: str):
-    with open(filename, "r") as contents:
+    with open(filename, "r", encoding="utf-8") as contents:
         run(contents.read())
 
 

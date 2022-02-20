@@ -29,6 +29,8 @@ class Scanner:
         "while": TokenType.WHILE,
         "null": TokenType.NULL,
         "let": TokenType.LET,
+        "false": TokenType.FALSE,
+        "true": TokenType.TRUE,
     }
 
     def __init__(self, program_text: str):
