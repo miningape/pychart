@@ -12,7 +12,7 @@ def run(source: str):
     print(list(map(str, tokens)))
 
 
-def runPrompt():
+def run_prompt():
     while True:
         line = input("$ : ")
 
@@ -22,7 +22,7 @@ def runPrompt():
         run(line)
 
 
-def runFile(filename: str):
+def run_file(filename: str):
     with open(filename, "r") as contents:
         run(contents.read())
 
