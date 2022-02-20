@@ -2,14 +2,9 @@ from shutil import ExecError
 import sys
 from typing import List
 
-from scanner import Scanner
-
 
 def run(source: str):
-    scanner = Scanner(source)
-    tokens = scanner.get_tokens()
-
-    print(list(map(str, tokens)))
+    print(source)
 
 
 def run_prompt():
