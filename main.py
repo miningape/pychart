@@ -26,9 +26,9 @@ def main(argc: int, argv: List[str]):
     if argc > 2:
         raise ExecError("Too many arguments")
     elif argc == 2:
-        runFile(argv[1])
+        run_file(argv[1])
     else:
-        runPrompt()
+        run_prompt()
 
 
 if __name__ == "__main__":
