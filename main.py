@@ -1,6 +1,7 @@
 from shutil import ExecError
 import sys
 from typing import List
+from pyparser import Parser
 
 from scanner import Scanner
 
@@ -8,8 +9,20 @@ from scanner import Scanner
 def run(source: str):
     scanner = Scanner(source)
     tokens = scanner.get_tokens()
+    ast = Parser(tokens).parse()
 
-    print(list(map(str, tokens)))
+    if ast is None:
+        return
+
+    value = ast()
+
+    try:
+        value = int(value)
+    except:                                                                                                                                                                         
+        pass
+
+    # print(f"AST: {ast}")
+    print(f": $ {value}")
 
 
 def run_prompt():
