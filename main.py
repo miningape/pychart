@@ -2,7 +2,7 @@ from shutil import ExecError
 import sys
 from typing import List
 
-from scanner import Scanner
+from libs.scanner import Scanner
 
 
 def run(source: str):

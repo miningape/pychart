@@ -1,5 +1,5 @@
 from typing import Any, Dict, List
-from token_type.exporter import Token, TokenType
+from .token_type.exporter import Token, TokenType
 
 
 class Scanner:
