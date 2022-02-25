@@ -1,5 +1,5 @@
 from typing import Any
-from token_type.exporter import TokenType, Token
+from .token_type import TokenType, Token
 
 
 class Expr:

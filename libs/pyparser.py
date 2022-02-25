@@ -1,8 +1,7 @@
 from typing import List
 
-from token_type.token import Token
-from token_type.token_type_enum import TokenType
-from expression import Binary, Expr, Unary, Literal, Grouping
+from .token_type import Token, TokenType
+from .expression import Binary, Expr, Unary, Literal, Grouping
 
 
 class Parser:
