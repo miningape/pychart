@@ -1,6 +1,3 @@
-# Will need to merge or do some shit to get main fixed
-
-
 def inc(number: int) -> int:
     return number + 1
 

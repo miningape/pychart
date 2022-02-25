@@ -1,43 +1,8 @@
 from shutil import ExecError
 import sys
 from typing import List
-from pyparser import Parser
 
-from libs.scanner import Scanner
-
-
-def run(source: str):
-    scanner = Scanner(source)
-    tokens = scanner.get_tokens()
-    ast = Parser(tokens).parse()
-
-    if ast is None:
-        return
-
-    value = ast()
-
-    try:
-        value = int(value)
-    except:                                                                                                                                                                         
-        pass
-
-    # print(f"AST: {ast}")
-    print(f": $ {value}")
-
-
-def run_prompt():
-    while True:
-        line = input("$ : ")
-
-        if line == ".exit":
-            break
-
-        run(line)
-
-
-def run_file(filename: str):
-    with open(filename, "r", encoding="utf-8") as contents:
-        run(contents.read())
+from src.pychart.runner import run_file, run_prompt
 
 
 def main(argc: int, argv: List[str]):
