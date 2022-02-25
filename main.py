@@ -1,8 +1,10 @@
 from shutil import ExecError
 import sys
+from os.path import dirname
 from typing import List
 
-from libs.scanner import Scanner
+sys.path.append(dirname(__file__) + '/src/')
+from pychart.scanner import Scanner
 
 
 def run(source: str):
