@@ -3,7 +3,7 @@ import sys
 from typing import List
 from pyparser import Parser
 
-from scanner import Scanner
+from libs.scanner import Scanner
 
 
 def run(source: str):
