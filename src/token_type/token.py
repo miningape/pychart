@@ -1,5 +1,5 @@
 from typing import Any
-from .token_type_enum import TokenType
+from src.token_type.token_type_enum import TokenType
 
 
 class Token:
