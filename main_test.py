@@ -1,11 +1,12 @@
 import sys
-sys.path.append('src')
 
+sys.path.append("src")
+
+
+# Are these supposed to be tests? tf
 import pychart
-import pychart.scanner
-import pychart.token_type
-import pychart.token_type.token_type_enum
-import pychart.token_type.token
+import pychart.runner
+
 
 def inc(number: int) -> int:
     return number + 1

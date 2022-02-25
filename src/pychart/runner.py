@@ -1,4 +1,4 @@
-from ..scanner import Scanner
+from src.scanner import Scanner
 
 
 def run(source: str):
