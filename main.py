@@ -1,32 +1,8 @@
 from shutil import ExecError
 import sys
-from os.path import dirname
 from typing import List
 
-sys.path.append('src')
-from pychart.scanner import Scanner
-
-
-def run(source: str):
-    scanner = Scanner(source)
-    tokens = scanner.get_tokens()
-
-    print(list(map(str, tokens)))
-
-
-def run_prompt():
-    while True:
-        line = input("$ : ")
-
-        if line == ".exit":
-            break
-
-        run(line)
-
-
-def run_file(filename: str):
-    with open(filename, "r", encoding="utf-8") as contents:
-        run(contents.read())
+from src.pychart.runner import run_file, run_prompt
 
 
 def main(argc: int, argv: List[str]):
