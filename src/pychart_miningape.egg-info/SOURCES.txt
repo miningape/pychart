@@ -1,9 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-setup.cfg
-src/pychart/__init__.py
-src/pychart_miningape.egg-info/PKG-INFO
-src/pychart_miningape.egg-info/SOURCES.txt
-src/pychart_miningape.egg-info/dependency_links.txt
-src/pychart_miningape.egg-info/top_level.txt
