@@ -3,7 +3,7 @@ import sys
 from os.path import dirname
 from typing import List
 
-sys.path.append(dirname(__file__) + '/src/')
+sys.path.append('src')
 from pychart.scanner import Scanner
 
 
