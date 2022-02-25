@@ -1,7 +1,0 @@
-README.md
-setup.py
-pychart.egg-info/PKG-INFO
-pychart.egg-info/SOURCES.txt
-pychart.egg-info/dependency_links.txt
-pychart.egg-info/top_level.txt
-src/pychart/__init__.py
