@@ -7,5 +7,5 @@ setup(
     author='',
     author_email='',
     url='https://github.com/miningape/pychart',
-    packages=['pychart'],
+    packages=['src/pychart'],
 )
