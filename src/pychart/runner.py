@@ -1,5 +1,5 @@
-from src.pyparser import Parser
 from src.scanner import Scanner
+from src.pyparser import Parser
 
 
 def run(source: str):
