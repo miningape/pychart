@@ -1,7 +1,8 @@
-from ..scanner import Scanner
+from src.scanner import Scanner
+from src.errors import Error
 
 
-def run(source: str):
+def run(source: str) -> Error:
     scanner = Scanner(source)
     tokens = scanner.get_tokens()
 
@@ -10,13 +11,16 @@ def run(source: str):
 
 
 def run_prompt():
+    count = 0
     while True:
-        line = input("$ : ")
-
+        line = input(f"${count} : ")
+        count += 1
         if line == ".exit":
             break
 
-        run(line)
+        error = run(line)
+        if error:
+            print(error)
 
 
 def run_file(filename: str):
