@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from enum import enum
+from enum import Enum
 
 
 class Error(metaclass=ABCMeta):

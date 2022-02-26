@@ -3,6 +3,9 @@ from src.errors import Error
 
 
 def run(source: str) -> Error:
+    """
+    @returns Error: returns Erorr object or None
+    """
     scanner = Scanner(source)
     tokens = scanner.get_tokens()
 
@@ -20,7 +23,7 @@ def run_prompt():
 
         error = run(line)
         if error:
-            print(error)
+            print('error')
 
 
 def run_file(filename: str):
