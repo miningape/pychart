@@ -4,7 +4,7 @@ from .token_type import TokenType, Token
 
 class Expr:
     def __call__(self) -> Any:
-        raise RuntimeError("Empty Expresson")
+        raise NotImplementedError("Empty Expresson")
 
 
 class Binary(Expr):
@@ -44,11 +44,11 @@ class Binary(Expr):
         elif self.operator.token_type == TokenType.EQUAL_EQUAL:
             return self.left() == self.right()
         elif self.operator.token_type == TokenType.EQUAL:
-            raise RuntimeError("Not implemented.")
+            raise NotImplementedError("Not implemented.")
         elif self.operator.token_type == TokenType.BANG_EQUAL:
             return self.left() != self.right()
 
-        raise RuntimeError("Call Binary Operator Undefined")
+        raise errors.TypeError("Call Binary Operator Undefined")
 
 
 class Unary(Expr):

@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 from src.token_type import Token, TokenType
+from src import errors
 
 
 class Scanner:
@@ -77,7 +78,7 @@ class Scanner:
             self.__advance()
 
         if self.__is_at_end():
-            pass  # Throw error -> string not ended
+            raise errors.SyntaxError()
 
         self.__advance()
 

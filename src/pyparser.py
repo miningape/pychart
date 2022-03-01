@@ -2,6 +2,7 @@ from typing import List
 
 from .token_type import Token, TokenType
 from .expression import Binary, Expr, Unary, Literal, Grouping
+from src import errors
 
 
 class Parser:
@@ -56,7 +57,7 @@ class Parser:
             print("Is at end")
         else:
             print(f"{token.line} at end. {message}")
-        raise RuntimeError()
+        raise errors.SyntaxError('')
 
     def expression(self) -> Expr:
         return self.equality()
