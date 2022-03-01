@@ -10,9 +10,7 @@ def main():
         run_file(kwargs.pop('file'))
     else:
         run_prompt()
-
-
-
+        
 
 if __name__ == '__main__':
     main()
