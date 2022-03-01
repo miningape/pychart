@@ -3,7 +3,7 @@ from .runner import run_prompt, run_file
 
 def main():
     parser = argparse.ArgumentParser(prog='pychart')
-    parser.add_argument('file', help='run a pychart file', default=None)
+    parser.add_argument('file', nargs='?', help='run a pychart file')
 
     kwargs = vars(parser.parse_args())
     if kwargs.get('file'):
