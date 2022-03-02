@@ -1,5 +1,5 @@
-from src.scanner import Scanner
-from src.token_type import TokenType
+from src.pychart.scanner import Scanner
+from src.pychart.token_type import TokenType
 
 
 def test_scanner_int():
