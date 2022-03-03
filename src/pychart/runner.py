@@ -6,7 +6,7 @@ def run(source: str):
     scanner = Scanner(source)
     tokens = scanner.get_tokens()
     ast = Parser(tokens).parse()
-
+    
     if ast is None:
         return
 

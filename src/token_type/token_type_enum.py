@@ -48,6 +48,9 @@ class TokenType(Enum):
     PRINT = auto()
     LET = auto()
 
+    # SEPARATOR
+    SEPARATOR = auto()
+
     # End Of File
     EOF = auto()
 

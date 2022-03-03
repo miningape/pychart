@@ -109,6 +109,17 @@ class Scanner:
 
         self.__add_token(type_of)
 
+    def __separator(self):
+        while self.__peek() in (' ', '\r', '\t'):
+            self.__advance()
+
+        text = self.source[self.start : self.current]
+        type_of = self.keywords.get(text)
+        if type_of is None:
+            type_of = TokenType.SEPARATOR
+
+        self.__add_token(type_of)
+
     def __scan_token(self):
         char = self.__advance()
 
@@ -162,8 +173,8 @@ class Scanner:
 
         # Whitespace
         elif char == " " or char == "\r" or char == "\t":
-            # Ignore whitespace
-            pass
+            self.__separator()
+            
         elif char == "\n":
             self.line += 1
 
