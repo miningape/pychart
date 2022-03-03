@@ -25,11 +25,13 @@ def run_prompt():
     try:
         while True:
             line = input("$ : ")
+            statement = line
+            while line:
+                line = input('... ')
+                statement += '\n' + line
 
-            if line == ".exit":
-                break
+            run(statement)
 
-            run(line)
     except KeyboardInterrupt:
         print()
         exit()
