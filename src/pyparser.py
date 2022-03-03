@@ -9,6 +9,11 @@ class Parser:
     current: int = 0
 
     def __init__(self, tokens: List[Token]):
+        for token, index in zip(tokens, range(len(tokens))):
+            if token.token_type == TokenType.SEPARATOR:
+                tokens.pop(index)
+
+        print(tokens)
         self.tokens = tokens
 
     def parse(self):
