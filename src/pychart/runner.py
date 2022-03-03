@@ -22,13 +22,17 @@ def run(source: str):
 
 
 def run_prompt():
-    while True:
-        line = input("$ : ")
+    try:
+        while True:
+            line = input("$ : ")
 
-        if line == ".exit":
-            break
+            if line == ".exit":
+                break
 
-        run(line)
+            run(line)
+    except KeyboardInterrupt:
+        print()
+        exit()
 
 
 def run_file(filename: str):
