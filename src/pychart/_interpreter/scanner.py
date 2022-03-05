@@ -1,5 +1,5 @@
 from typing import Any, Dict, List
-from src.token_type import Token, TokenType
+from .token_type import Token, TokenType
 
 
 class Scanner:
