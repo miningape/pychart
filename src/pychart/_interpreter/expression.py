@@ -1,10 +1,16 @@
 from typing import Any
-from .token_type import TokenType, Token
+from src.pychart._interpreter.environment import Environment
+from src.pychart._interpreter.token_type import TokenType, Token
 
 
 class Expr:
-    def __call__(self) -> Any:
+    def __call__(self, environment: Environment) -> Any:
         raise RuntimeError("Empty Expresson")
+
+
+def is_number(num: Any):
+    typeof = type(num)
+    return typeof == int or typeof == float
 
 
 class Binary(Expr):
@@ -20,33 +26,33 @@ class Binary(Expr):
     def __str__(self) -> str:
         return f"( {self.operator} {str(self.left)}, {str(self.right)} )"
 
-    def __call__(self) -> Any:
+    def __call__(self, environment: Environment) -> Any:
         if self.operator.token_type == TokenType.STAR:
-            return self.left() * self.right()
+            return self.left(environment) * self.right(environment)
         elif self.operator.token_type == TokenType.SLASH:
-            return self.left() / self.right()
+            return self.left(environment) / self.right(environment)
         elif self.operator.token_type == TokenType.PLUS:
-            left = self.left()
-            right = self.right()
-            state = type(left) == type(right)
+            left = self.left(environment)
+            right = self.right(environment)
+            state = is_number(left) == is_number(right)
 
             return left + right if state else str(left) + str(right)
         elif self.operator.token_type == TokenType.MINUS:
-            return self.left() - self.right()
+            return self.left(environment) - self.right(environment)
         elif self.operator.token_type == TokenType.GREATER_EQUAL:
-            return self.left() >= self.right()
+            return self.left(environment) >= self.right(environment)
         elif self.operator.token_type == TokenType.GREATER:
-            return self.left() > self.right()
+            return self.left(environment) > self.right(environment)
         elif self.operator.token_type == TokenType.LESSER_EQUAL:
-            return self.left() <= self.right()
+            return self.left(environment) <= self.right(environment)
         elif self.operator.token_type == TokenType.LESSER:
-            return self.left() < self.right()
+            return self.left(environment) < self.right(environment)
         elif self.operator.token_type == TokenType.EQUAL_EQUAL:
-            return self.left() == self.right()
+            return self.left(environment) == self.right(environment)
         elif self.operator.token_type == TokenType.EQUAL:
             raise RuntimeError("Not implemented.")
         elif self.operator.token_type == TokenType.BANG_EQUAL:
-            return self.left() != self.right()
+            return self.left(environment) != self.right(environment)
 
         raise RuntimeError("Call Binary Operator Undefined")
 
@@ -62,11 +68,11 @@ class Unary(Expr):
     def __str__(self) -> str:
         return f"( {self.operator} {str(self.right)} )"
 
-    def __call__(self) -> Any:
+    def __call__(self, environment: Environment) -> Any:
         if self.operator.token_type == TokenType.MINUS:
-            return 0 - self.right()
+            return 0 - self.right(environment)
         elif self.operator.token_type == TokenType.BANG:
-            return not self.right()
+            return not self.right(environment)
 
         raise RuntimeError("Call Unary Unefined")
 
@@ -80,7 +86,7 @@ class Literal(Expr):
     def __str__(self) -> str:
         return str(self.value)
 
-    def __call__(self) -> Any:
+    def __call__(self, environment: Environment) -> Any:
         return try_cast_int(self.value)
 
 
@@ -101,18 +107,49 @@ class Grouping(Expr):
     def __str__(self) -> str:
         return f"( {str(self.expr)} )"
 
-    def __call__(self) -> Any:
-        return self.expr()
+    def __call__(self, environment: Environment) -> Any:
+        return self.expr(environment)
+
+
+class Variable(Expr):
+    name: Token
+
+    def __init__(self, name: Token):
+        self.name = name
+
+    @staticmethod
+    def from_expr(expr: Any):
+        name = expr.name
+
+        if name is None:
+            raise RuntimeError("Cannot convert expression to variable expression")
+
+        return Variable(name)
+
+    def __call__(self, environment: Environment):
+        return environment.retrieve(self.name.lexeme)
+
+
+class Assignment(Expr):
+    name: Token
+    initializer: Expr
+
+    def __init__(self, name: Token, initializer: Expr):
+        self.name = name
+        self.initializer = initializer
+
+    def __call__(self, environment: Environment):
+        return environment.mutate(self.name.lexeme, self.initializer(environment))
 
 
 if __name__ == "__main__":
     # -123 * (45.67)
-    expr = Binary(
+    expre = Binary(
         Unary(Token(TokenType.MINUS, "-", None, 1), Literal(123)),
         Token(TokenType.STAR, "*", None, 1),
         Grouping(Literal(45.67)),
     )
 
     print("Running expression for: -123 * (45.67)")
-    print("Tree: \t", expr)
-    print("Result:\t", expr())
+    print("Tree: \t", expre)
+    print("Result:\t", expre(Environment()))

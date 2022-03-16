@@ -1,3 +1,6 @@
+from typing import Any
+
+from src.pychart._interpreter.environment import Environment
 from ._interpreter.scanner import Scanner
 from ._interpreter.pyparser import Parser
 
@@ -5,20 +8,21 @@ from ._interpreter.pyparser import Parser
 def run(source: str):
     scanner = Scanner(source)
     tokens = scanner.get_tokens()
-    ast = Parser(tokens).parse()
+    statements = Parser(tokens).parse()
+    last_value: Any = None
 
-    if ast is None:
-        return
-
-    value = ast()
+    if statements is None:
+        return None
 
     try:
-        value = int(value)
-    except:
-        pass
+        environment = Environment()
+        for statement in statements:
+            last_value = statement(environment)
+    except BaseException as err:
+        print(f"Error: {err}")
+        print("Exiting...")
 
-    # print(f"AST: {ast}")
-    print(value)
+    return last_value
 
 
 def run_prompt():
@@ -29,9 +33,12 @@ def run_prompt():
             if line == ".exit":
                 break
 
-            run(line)
+            result = run(line)
+            if result:
+                print(result)
+
     except KeyboardInterrupt:
-        print()
+        print("Keyboard Interrupt")
         exit()
 
 
