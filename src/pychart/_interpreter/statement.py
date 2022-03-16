@@ -1,7 +1,6 @@
 from typing import List, Optional, Any
 from src.pychart._interpreter.environment import Environment
 from src.pychart._interpreter.expression import Expr, Token
-from src.pychart._interpreter.token_type.token_type_enum import TokenType
 
 
 class Stmt:
@@ -58,3 +57,16 @@ class Block(Stmt):
 
         for statement in self.statements:
             statement(environment)
+
+
+class If(Stmt):
+    test: Expr
+    body: Stmt
+
+    def __init__(self, test: Expr, body: Stmt):
+        self.test = test
+        self.body = body
+
+    def __call__(self, environment: Environment):
+        if self.test(environment):
+            self.body(environment)

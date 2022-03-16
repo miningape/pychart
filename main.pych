@@ -1,14 +1,14 @@
 print("Hello World!");
 
-let x = 10;
-x = 20;
+let y = 10;
+y = 20;
 
-{
+if (y = false) {
   print(x);
   let y = 20;
   print(y);
 }
 
-// print(y); // Error!!
+print(y); // Error!!
 
-print(x = 10);
+//print(x = 10);
