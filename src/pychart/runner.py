@@ -15,9 +15,10 @@ def run(source: str):
         return None
 
     try:
-        environment = Environment()
+        # environment = Environment()
         for statement in statements:
-            last_value = statement(environment)
+            # last_value = statement(environment)
+            print(statement.javascript())
     except BaseException as err:
         print(f"Error: {err}")
         print("Exiting...")

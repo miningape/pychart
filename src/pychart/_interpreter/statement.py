@@ -7,6 +7,9 @@ class Stmt:
     def __call__(self, environment: Environment) -> Any:
         raise RuntimeError("Expected Actual Statement")
 
+    def javascript(self) -> str:
+        raise RuntimeError("JS - Expected Actual Statement")
+
 
 class Expression(Stmt):
     expr: Expr
@@ -16,6 +19,9 @@ class Expression(Stmt):
 
     def __call__(self, environment: Environment):
         return self.expr(environment)
+
+    def javascript(self) -> str:
+        return self.expr.javascript() + ";"
 
 
 class Print(Stmt):
@@ -27,6 +33,9 @@ class Print(Stmt):
     def __call__(self, environment: Environment):
         print(self.expr(environment))
         return None
+
+    def javascript(self) -> str:
+        return f"console.log({self.expr.javascript()});"
 
 
 class Let(Stmt):
@@ -45,6 +54,14 @@ class Let(Stmt):
         environment.reverve(self.name.lexeme, value)
         return value
 
+    def javascript(self) -> str:
+        init = ""
+
+        if self.initializer:
+            init += "=" + self.initializer.javascript()
+
+        return f"let {self.name.lexeme}{init};"
+
 
 class Block(Stmt):
     statements: List[Stmt]
@@ -58,6 +75,14 @@ class Block(Stmt):
         for statement in self.statements:
             statement(environment)
 
+    def javascript(self) -> str:
+        statmentjs = "{"
+
+        for statement in self.statements:
+            statmentjs += statement.javascript()
+
+        return statmentjs + "}"
+
 
 class If(Stmt):
     test: Expr
@@ -70,3 +95,6 @@ class If(Stmt):
     def __call__(self, environment: Environment):
         if self.test(environment):
             self.body(environment)
+
+    def javascript(self) -> str:
+        return f"if({self.test.javascript()}){self.body.javascript()}"

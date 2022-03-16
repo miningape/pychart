@@ -1,3 +1,4 @@
+from distutils.errors import CompileError
 from typing import Any
 from src.pychart._interpreter.environment import Environment
 from src.pychart._interpreter.token_type import TokenType, Token
@@ -6,6 +7,9 @@ from src.pychart._interpreter.token_type import TokenType, Token
 class Expr:
     def __call__(self, environment: Environment) -> Any:
         raise RuntimeError("Empty Expresson")
+
+    def javascript(self) -> str:
+        raise CompileError("Compilation to JS - Expected instance")
 
 
 def is_number(num: Any):
@@ -56,6 +60,11 @@ class Binary(Expr):
 
         raise RuntimeError("Call Binary Operator Undefined")
 
+    def javascript(self) -> str:
+        return (
+            f"{self.right.javascript()}{self.operator.lexeme}{self.left.javascript()}"
+        )
+
 
 class Unary(Expr):
     operator: Token
@@ -67,6 +76,9 @@ class Unary(Expr):
 
     def __str__(self) -> str:
         return f"( {self.operator} {str(self.right)} )"
+
+    def javascript(self) -> str:
+        return f"{self.operator.lexeme}{self.right.javascript()}"
 
     def __call__(self, environment: Environment) -> Any:
         if self.operator.token_type == TokenType.MINUS:
@@ -85,6 +97,17 @@ class Literal(Expr):
 
     def __str__(self) -> str:
         return str(self.value)
+
+    def javascript(self) -> str:
+        value = f'"{str(self.value)}"' if type(self.value) == str else self.value
+
+        if type(value) == bool:
+            if value:
+                value = "true"
+            else:
+                value = "false"
+
+        return str(value)
 
     def __call__(self, environment: Environment) -> Any:
         return try_cast_int(self.value)
@@ -107,6 +130,9 @@ class Grouping(Expr):
     def __str__(self) -> str:
         return f"( {str(self.expr)} )"
 
+    def javascript(self) -> str:
+        return f"({self.expr.javascript()})"
+
     def __call__(self, environment: Environment) -> Any:
         return self.expr(environment)
 
@@ -119,6 +145,7 @@ class Variable(Expr):
 
     @staticmethod
     def from_expr(expr: Any):
+        # Probably try catch would be better should prolly test
         name = expr.name
 
         if name is None:
@@ -128,6 +155,12 @@ class Variable(Expr):
 
     def __call__(self, environment: Environment):
         return environment.retrieve(self.name.lexeme)
+
+    def __str__(self) -> str:
+        return f"(GET {self.name.lexeme})"
+
+    def javascript(self) -> str:
+        return self.name.lexeme
 
 
 class Assignment(Expr):
@@ -140,6 +173,12 @@ class Assignment(Expr):
 
     def __call__(self, environment: Environment):
         return environment.mutate(self.name.lexeme, self.initializer(environment))
+
+    def __str__(self) -> str:
+        return f"(Assign {str(self.initializer)} to {self.name.lexeme} )"
+
+    def javascript(self) -> str:
+        return f"{self.name.lexeme}={self.initializer.javascript()}"
 
 
 if __name__ == "__main__":
