@@ -4,9 +4,13 @@ let y = 10;
 y = 20;
 
 if (y = false) {
-  print(x);
-  let y = 20;
-  print(y);
+  print("one")
+} elif (true) {
+  print("Yay");
+} elif (false) {
+  print("Nay");
+} else {
+  print("OOF");
 }
 
 print(y); // Error!!

@@ -65,13 +65,25 @@ class Parser:
 
     def if_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after IF keyword')
-        test = self.expression()
+        if_test = self.expression()
         self.consume(
             TokenType.RIGHT_PEREN, 'Expected ")" after expression in IF statement'
         )
-        body = self.statement()
 
-        return If(test, body)
+        if_body = self.statement()
+        else_body = None
+
+        matched_elif = False
+        if self.match(TokenType.ELIF):
+            matched_elif = True
+            else_body = self.if_statement()
+
+        if self.match(TokenType.ELSE):
+            if matched_elif:
+                raise RuntimeError("Only 1 ELSE can be after an IF")
+            else_body = self.statement()
+
+        return If(if_test, if_body, else_body)
 
     def print_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')

@@ -60,13 +60,24 @@ class Block(Stmt):
 
 
 class If(Stmt):
-    test: Expr
-    body: Stmt
+    if_test: Expr
+    if_body: Stmt
+    else_body: Optional[Stmt]
 
-    def __init__(self, test: Expr, body: Stmt):
-        self.test = test
-        self.body = body
+    def __init__(
+        self,
+        if_test: Expr,
+        if_body: Stmt,
+        else_body: Optional[Stmt],
+    ):
+        self.if_test = if_test
+        self.if_body = if_body
+
+        self.else_body = else_body
 
     def __call__(self, environment: Environment):
-        if self.test(environment):
-            self.body(environment)
+        test_result = self.if_test(environment)
+        if test_result:
+            self.if_body(environment)
+        elif self.else_body and not test_result:
+            self.else_body(environment)
