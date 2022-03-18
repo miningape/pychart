@@ -1,14 +1,7 @@
-print("Hello World!");
+let name = input("Name?\n");
 
-let x = 10;
-x = 20;
-
-{
-  print(x);
-  let y = 20;
-  print(y);
+if (name == "jeff") {
+  print("MYnamAJeff");
+} else {
+  print("DorMButRIansLyNOW")
 }
-
-// print(y); // Error!!
-
-print(x = 10);

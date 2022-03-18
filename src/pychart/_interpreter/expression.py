@@ -1,4 +1,5 @@
-from typing import Any
+from typing import Any, List
+from src.pychart._interpreter.callable import PychartCallable
 from src.pychart._interpreter.environment import Environment
 from src.pychart._interpreter.token_type import TokenType, Token
 
@@ -118,13 +119,12 @@ class Variable(Expr):
         self.name = name
 
     @staticmethod
-    def from_expr(expr: Any):
-        name = expr.name
+    def from_expr(expr: Expr):
+        if isinstance(expr, Variable):
+            name: Token = expr.name
+            return Variable(name)
 
-        if name is None:
-            raise RuntimeError("Cannot convert expression to variable expression")
-
-        return Variable(name)
+        raise RuntimeError("Cannot convert expression to variable expression")
 
     def __call__(self, environment: Environment):
         return environment.retrieve(self.name.lexeme)
@@ -140,6 +140,30 @@ class Assignment(Expr):
 
     def __call__(self, environment: Environment):
         return environment.mutate(self.name.lexeme, self.initializer(environment))
+
+
+class Call(Expr):
+    callee: Expr
+    arguments: List[Expr]
+
+    def __init__(self, callee: Expr, arguments: List[Expr]):
+        self.callee = callee
+        self.arguments = arguments
+
+    def __call__(self, environment: Environment):
+        callee_eval: Any = self.callee(environment)
+
+        args: List[Any] = []
+        for arg in self.arguments:
+            args.append(arg(environment))
+
+        callable_fn = PychartCallable.from_expr(callee_eval)
+        if len(args) != callable_fn.arity():
+            raise RuntimeError(
+                f"Too many arguments for function expected {callable_fn.arity()} but got {len(args)}"
+            )
+
+        return callable_fn(environment, args)
 
 
 if __name__ == "__main__":

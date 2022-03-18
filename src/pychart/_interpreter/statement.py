@@ -1,7 +1,6 @@
 from typing import List, Optional, Any
 from src.pychart._interpreter.environment import Environment
 from src.pychart._interpreter.expression import Expr, Token
-from src.pychart._interpreter.token_type.token_type_enum import TokenType
 
 
 class Stmt:
