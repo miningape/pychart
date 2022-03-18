@@ -158,9 +158,12 @@ class Call(Expr):
             args.append(arg(environment))
 
         callable_fn = PychartCallable.from_expr(callee_eval)
-        if len(args) != callable_fn.arity():
+
+        error, message = callable_fn.arity(args)
+        if error:
             raise RuntimeError(
-                f"Too many arguments for function expected {callable_fn.arity()} but got {len(args)}"
+                message
+                # f"Too many arguments for function expected {callable_fn.arity()} but got {len(args)}"
             )
 
         return callable_fn(environment, args)

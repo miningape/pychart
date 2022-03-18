@@ -1,5 +1,5 @@
 from typing import Any
-from src.pychart._interpreter.callable import InputFunc
+from src.pychart._interpreter.callable import InputFunc, PrintFunc
 
 from src.pychart._interpreter.environment import Environment
 from ._interpreter.scanner import Scanner
@@ -18,6 +18,8 @@ def run(source: str):
     try:
         environment = Environment()
         environment.reverve("input", InputFunc())
+        environment.reverve("print", PrintFunc())
+
         for statement in statements:
             last_value = statement(environment)
     except BaseException as err:

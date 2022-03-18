@@ -50,8 +50,8 @@ class Parser:
         return Let(name, initializer)
 
     def statement(self) -> Stmt:
-        if self.match(TokenType.PRINT):
-            return self.print_statement()
+        # if self.match(TokenType.PRINT):
+        # return self.print_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
 
@@ -62,6 +62,7 @@ class Parser:
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Expression(expr)
 
+    # @Depricated
     def print_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')
         expr = self.expression()
