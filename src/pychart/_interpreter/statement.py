@@ -1,4 +1,5 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Tuple
+from src.pychart._interpreter.callable import PychartCallable
 from src.pychart._interpreter.environment import Environment
 from src.pychart._interpreter.expression import Expr, Token
 
@@ -57,6 +58,8 @@ class Block(Stmt):
 
         for statement in self.statements:
             statement(block_environment)
+
+
 class Function(Stmt):
     name: Token
     params: List[Token]
