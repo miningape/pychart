@@ -1,5 +1,5 @@
 from typing import Any
-from src.pychart._interpreter.callable import InputFunc, PrintFunc
+from src.pychart._interpreter.callable import InputFunc, OrangeFunc, PrintFunc
 
 from src.pychart._interpreter.environment import Environment
 from ._interpreter.scanner import Scanner
@@ -19,6 +19,7 @@ def run(source: str):
         environment = Environment()
         environment.reverve("input", InputFunc())
         environment.reverve("print", PrintFunc())
+        environment.reverve("orange", OrangeFunc())
 
         for statement in statements:
             last_value = statement(environment)

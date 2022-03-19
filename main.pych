@@ -4,4 +4,9 @@ func say(header, body) {
   print(header, body);
 }
 
+let pp = (jeff) => {
+  print(jeff);
+};
+
 say("Hello", name);
+pp(name);

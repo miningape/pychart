@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any, Tuple, List
 from src.pychart._interpreter.environment import Environment
 
 
@@ -31,3 +31,11 @@ class PrintFunc(PychartCallable):
 
     def arity(self, args: List[Any]) -> Tuple[bool, str]:
         return (False, "")
+
+
+class OrangeFunc(PychartCallable):
+    def __call__(self, _: Environment, args: List[Any]) -> Any:
+        return "\033[93m" + str(args[0]) + "\033[0m"
+
+    def arity(self, args: List[Any]) -> Tuple[bool, str]:
+        return (len(args) != 1, "")
