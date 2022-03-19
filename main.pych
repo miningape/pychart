@@ -1,3 +1,7 @@
 let name = input("Name?\n");
 
-print("Hello " + name);
+func say(header, body) {
+  print(header, body);
+}
+
+say("Hello", name);

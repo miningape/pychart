@@ -53,7 +53,46 @@ class Block(Stmt):
         self.statements = statements
 
     def __call__(self, environment: Environment):
-        environment = Environment(environment)
+        block_environment = Environment(environment)
 
         for statement in self.statements:
-            statement(environment)
+            statement(block_environment)
+class Function(Stmt):
+    name: Token
+    params: List[Token]
+    body: List[Stmt]
+
+    def __init__(self, name: Token, params: List[Token], body: List[Stmt]):
+        self.name = name
+        self.params = params
+        self.body = body
+
+    def __call__(self, environment: Environment) -> Any:
+        environment.reverve(self.name.lexeme, Function.PychartFunction(self))
+        return None
+
+    class PychartFunction(PychartCallable):
+        definition: "Function"
+
+        def __init__(self, definition: "Function") -> None:
+            self.definition = definition
+
+        def __str__(self) -> str:
+            return f'<Function "{self.definition.name.lexeme}">'
+
+        def __call__(self, environment: Environment, args: List[Any]) -> Any:
+            function_environment = Environment(environment)
+
+            # pylint: disable=consider-using-enumerate
+            for i in range(len(args)):
+                function_environment.reverve(self.definition.params[i].lexeme, args[i])
+            # pylint: enable=consider-using-enumerate
+
+            for statement in self.definition.body:
+                statement(function_environment)
+
+        def arity(self, args: List[Any]) -> Tuple[bool, str]:
+            return (
+                len(self.definition.params) != len(args),
+                f"Wrong amount of args used to call {self.definition.name.lexeme}, expected {len(self.definition.params)} got {len(args)}",
+            )
