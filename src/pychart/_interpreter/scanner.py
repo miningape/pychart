@@ -141,7 +141,9 @@ class Scanner:
             )
         elif char == "=":
             self.__add_token(
-                TokenType.EQUAL_EQUAL if self.__match("=") else TokenType.EQUAL
+                TokenType.EQUAL_EQUAL
+                if self.__match("=")
+                else (TokenType.ARROW if self.__match(">") else TokenType.EQUAL)
             )
         elif char == ">":
             self.__add_token(

@@ -48,6 +48,8 @@ class TokenType(Enum):
     # PRINT = auto()
     LET = auto()
 
+    ARROW = auto()
+
     # End Of File
     EOF = auto()
 

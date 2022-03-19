@@ -1,5 +1,6 @@
 from typing import List, Optional
 from src.pychart._interpreter.statement import (
+    AnonFunction,
     Block,
     Expression,
     Function,
@@ -263,6 +264,26 @@ class Parser:
 
         return Call(callee, args)
 
+    def function_args(self, first_param: Token) -> Expr:
+        params = [first_param]
+
+        if not self.match(TokenType.RIGHT_PEREN):
+            while self.match(TokenType.COMMA):
+                if len(params) > 127:
+                    self.error(self.peek(), "Too many arguments for function, max 127")
+
+                params.append(
+                    self.consume(
+                        TokenType.IDENTIFIER, "Expected identifier in arg list"
+                    )
+                )
+
+        self.consume(TokenType.ARROW, 'Expected "=>" after arg list')
+        self.consume(TokenType.LEFT_BRACE, 'Expected "{" after "=>"')
+        body = self.block()
+
+        return AnonFunction(params, body)
+
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):
             return Literal(False)
@@ -275,8 +296,19 @@ class Parser:
             return Literal(self.previous().literal)
 
         if self.match(TokenType.LEFT_PEREN):
+            if self.match(TokenType.RIGHT_PEREN):
+                if not self.match(TokenType.ARROW):
+                    return Grouping(Literal(None))
+
+                self.consume(TokenType.LEFT_BRACE, 'Expected "{" after "=>"')
+                body = self.block()
+                return AnonFunction([], body)
+
+            if self.match(TokenType.IDENTIFIER):
+                return self.function_args(self.previous())
+
             expr = self.expression()
-            self.consume(TokenType.RIGHT_PEREN, "Cannot match )")
+            self.consume(TokenType.RIGHT_PEREN, 'Expected ")" after expression')
             return Grouping(expr)
 
         if self.match(TokenType.IDENTIFIER):
