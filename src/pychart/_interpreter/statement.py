@@ -85,18 +85,18 @@ class If(Stmt):
 
 class While(Stmt):
     
-    while_test: Expr
-    while_body: Stmt
+    test: Expr
+    body: Stmt
 
     def __init__(
         self,
-        while_test: Expr,
-        while_body: Stmt,
+        test: Expr,
+        body: Stmt,
     ):
-        self.while_test = while_test
-        self.while_body = while_body
+        self.test = while_test
+        self.body = while_body
 
     def __call__(self, environment: Environment):
-        while self.while_test(environment):
-            self.while_body(environment)
+        while self.test(environment):
+            self.body(environment)
         return None
