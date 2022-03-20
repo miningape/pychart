@@ -1,5 +1,5 @@
 from typing import List, Optional
-from src.pychart._interpreter.statement import Block, Expression, Print, Stmt, Let
+from src.pychart._interpreter.statement import Block, Expression, If, Print, Stmt, Let, While
 from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.expression import (
     Assignment,
@@ -49,10 +49,15 @@ class Parser:
         return Let(name, initializer)
 
     def statement(self) -> Stmt:
+        if self.match(TokenType.IF):
+            return self.if_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
+
+        if self.match(TokenType.WHILE):
+            return self.while_statement()
 
         return self.expression_statement()
 
@@ -60,6 +65,45 @@ class Parser:
         expr = self.expression()
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Expression(expr)
+
+    def while_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after WHILE keyword')
+        while_test = self.expression()
+        self.consume( TokenType.RIGHT_PEREN, 'Expected ")" after expression in WHILE statement' )
+
+        while_body = self.statement()
+
+        #saigo ni..........Baba jonhson Bizzaeraaeh...........
+        # so why is this funny ( to m e )
+        # sounds like sterioetypical anime voice
+        # good vocal tonage ( sounds niceto say) good vowels, mixed with with good constancants
+        # reminds me of mitsubishi materieals vine
+        # thassa bout it
+
+        return While(while_test, while_body)
+
+
+    def if_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after IF keyword')
+        if_test = self.expression()
+        self.consume(
+            TokenType.RIGHT_PEREN, 'Expected ")" after expression in IF statement'
+        )
+
+        if_body = self.statement()
+        else_body = None
+
+        matched_elif = False
+        if self.match(TokenType.ELIF):
+            matched_elif = True
+            else_body = self.if_statement()
+
+        if self.match(TokenType.ELSE):
+            if matched_elif:
+                raise RuntimeError("Only 1 ELSE can be after an IF")
+            else_body = self.statement()
+
+        return If(if_test, if_body, else_body)
 
     def print_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')
