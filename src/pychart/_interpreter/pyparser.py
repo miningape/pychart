@@ -73,13 +73,6 @@ class Parser:
 
         while_body = self.statement()
 
-        #saigo ni..........Baba jonhson Bizzaeraaeh...........
-        # so why is this funny ( to m e )
-        # sounds like sterioetypical anime voice
-        # good vocal tonage ( sounds niceto say) good vowels, mixed with with good constancants
-        # reminds me of mitsubishi materieals vine
-        # thassa bout it
-
         return While(while_test, while_body)
 
 
