@@ -1,6 +1,7 @@
 from typing import Any
 
 from src.pychart._interpreter.environment import Environment
+from src.pychart._interpreter.resolver import Resolver
 from ._interpreter.scanner import Scanner
 from ._interpreter.pyparser import Parser
 
@@ -13,6 +14,10 @@ def run(source: str):
 
     if statements is None:
         return None
+
+    resolver = Resolver()
+    for statement in statements:
+        statement.visit(resolver)
 
     try:
         environment = Environment()

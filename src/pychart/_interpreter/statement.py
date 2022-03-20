@@ -1,14 +1,13 @@
 from typing import List, Optional, Any
 from src.pychart._interpreter.environment import Environment
 from src.pychart._interpreter.expression import Expr, Token
-from src.pychart._interpreter.token_type.token_type_enum import TokenType
 
 
 class Stmt:
     def __call__(self, environment: Environment) -> Any:
         raise RuntimeError("Expected Actual Statement")
 
-    def visit(self, stmt: "StmtVisitor"):
+    def visit(self, visitor: "StmtVisitor") -> Any:
         raise RuntimeError("Unimplmented visitor visit")
 
 
@@ -17,18 +16,27 @@ class StmtVisitor:
     def throw():
         raise Exception("Unimplmented visitor method")
 
-    def expression(self, stmt: "Expression"):
+    # pylint: disable=unused-argument
+    def expression(self, stmt: "Expression") -> Any:
         StmtVisitor.throw()
 
-    def print(self, stmt: "Print"):
+    def print(self, stmt: "Print") -> Any:
         StmtVisitor.throw()
 
-    def let(self, stmt: "Let"):
+    def let(self, stmt: "Let") -> Any:
         StmtVisitor.throw()
+
+    def block(self, stmt: "Block") -> Any:
+        StmtVisitor.throw()
+
+    # pylint: enable=unused-argument
 
 
 class Expression(Stmt):
     expr: Expr
+
+    def visit(self, visitor: "StmtVisitor"):
+        return visitor.expression(self)
 
     def __init__(self, expr: Expr):
         self.expr = expr
@@ -39,6 +47,9 @@ class Expression(Stmt):
 
 class Print(Stmt):
     expr: Expr
+
+    def visit(self, visitor: "StmtVisitor") -> Any:
+        return visitor.print(self)
 
     def __init__(self, expr: Expr):
         self.expr = expr
@@ -51,6 +62,9 @@ class Print(Stmt):
 class Let(Stmt):
     name: Token
     initializer: Optional[Expr]
+
+    def visit(self, visitor: "StmtVisitor") -> Any:
+        return visitor.let(self)
 
     def __init__(self, name: Token, initializer: Optional[Expr]):
         self.name = name
@@ -67,6 +81,9 @@ class Let(Stmt):
 
 class Block(Stmt):
     statements: List[Stmt]
+
+    def visit(self, visitor: "StmtVisitor") -> Any:
+        return visitor.block(self)
 
     def __init__(self, statements: List[Stmt]):
         self.statements = statements

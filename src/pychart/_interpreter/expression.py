@@ -7,7 +7,7 @@ class Expr:
     def __call__(self, environment: Environment) -> Any:
         raise RuntimeError("Empty Expresson")
 
-    def accept(self, visitor: "ExprVisitor"):
+    def visit(self, visitor: "ExprVisitor") -> Any:
         raise RuntimeError("resolve unimplemented for expr")
 
 
@@ -56,7 +56,7 @@ class Binary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: ExprVisitor):
+    def visit(self, visitor: ExprVisitor):
         return visitor.binary(self)
 
     def __init__(self, left: Expr, operator: Token, right: Expr):
@@ -102,7 +102,7 @@ class Unary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: ExprVisitor):
+    def visit(self, visitor: ExprVisitor):
         return visitor.unary(self)
 
     def __init__(self, operator: Token, right: Expr):
@@ -124,7 +124,7 @@ class Unary(Expr):
 class Literal(Expr):
     value: Any
 
-    def accept(self, visitor: ExprVisitor):
+    def visit(self, visitor: ExprVisitor):
         return visitor.literal(self)
 
     def __init__(self, value: Any):
@@ -140,7 +140,7 @@ class Literal(Expr):
 class Grouping(Expr):
     expr: Expr
 
-    def accept(self, visitor: ExprVisitor):
+    def visit(self, visitor: ExprVisitor):
         return visitor.grouping(self)
 
     def __init__(self, expr_: Expr):
@@ -156,7 +156,7 @@ class Grouping(Expr):
 class Variable(Expr):
     name: Token
 
-    def accept(self, visitor: "ExprVisitor"):
+    def visit(self, visitor: "ExprVisitor"):
         return visitor.variable(self)
 
     def __init__(self, name: Token):
@@ -179,7 +179,7 @@ class Assignment(Expr):
     name: Token
     initializer: Expr
 
-    def accept(self, visitor: "ExprVisitor"):
+    def visit(self, visitor: "ExprVisitor"):
         return visitor.assignment(self)
 
     def __init__(self, name: Token, initializer: Expr):
