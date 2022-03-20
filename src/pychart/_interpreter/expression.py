@@ -7,16 +7,57 @@ class Expr:
     def __call__(self, environment: Environment) -> Any:
         raise RuntimeError("Empty Expresson")
 
+    def accept(self, visitor: "ExprVisitor"):
+        raise RuntimeError("resolve unimplemented for expr")
+
+
+class ExprVisitor:
+    @staticmethod
+    def throw():
+        raise Exception("Unimplemented expr visitor")
+
+    # pylint: disable=unused-argument
+    def binary(self, expr: "Binary") -> Any:
+        ExprVisitor.throw()
+
+    def unary(self, expr: "Unary") -> Any:
+        ExprVisitor.throw()
+
+    def literal(self, expr: "Literal") -> Any:
+        ExprVisitor.throw()
+
+    def grouping(self, expr: "Grouping") -> Any:
+        ExprVisitor.throw()
+
+    def variable(self, expr: "Variable") -> Any:
+        ExprVisitor.throw()
+
+    def assignment(self, expr: "Assignment") -> Any:
+        ExprVisitor.throw()
+
+    # pylint: enable=unused-argument
+
 
 def is_number(num: Any):
     typeof = type(num)
     return typeof == int or typeof == float
 
 
+def try_cast_int(num: Any):
+    if isinstance(num, (float)):
+        if int(num) == num:
+            return int(num)
+
+    return num
+
+
 class Binary(Expr):
     left: Expr
     operator: Token
     right: Expr
+
+    def accept(self, visitor: ExprVisitor):
+        return visitor.binary(self)
 
     def __init__(self, left: Expr, operator: Token, right: Expr):
         self.left = left
@@ -61,6 +102,9 @@ class Unary(Expr):
     operator: Token
     right: Expr
 
+    def accept(self, visitor: ExprVisitor):
+        return visitor.unary(self)
+
     def __init__(self, operator: Token, right: Expr):
         self.operator = operator
         self.right = right
@@ -80,6 +124,9 @@ class Unary(Expr):
 class Literal(Expr):
     value: Any
 
+    def accept(self, visitor: ExprVisitor):
+        return visitor.literal(self)
+
     def __init__(self, value: Any):
         self.value = value
 
@@ -90,16 +137,11 @@ class Literal(Expr):
         return try_cast_int(self.value)
 
 
-def try_cast_int(num: Any):
-    if isinstance(num, (float)):
-        if int(num) == num:
-            return int(num)
-
-    return num
-
-
 class Grouping(Expr):
     expr: Expr
+
+    def accept(self, visitor: ExprVisitor):
+        return visitor.grouping(self)
 
     def __init__(self, expr_: Expr):
         self.expr = expr_
@@ -113,6 +155,9 @@ class Grouping(Expr):
 
 class Variable(Expr):
     name: Token
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.variable(self)
 
     def __init__(self, name: Token):
         self.name = name
@@ -133,6 +178,9 @@ class Variable(Expr):
 class Assignment(Expr):
     name: Token
     initializer: Expr
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.assignment(self)
 
     def __init__(self, name: Token, initializer: Expr):
         self.name = name

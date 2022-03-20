@@ -8,6 +8,24 @@ class Stmt:
     def __call__(self, environment: Environment) -> Any:
         raise RuntimeError("Expected Actual Statement")
 
+    def visit(self, stmt: "StmtVisitor"):
+        raise RuntimeError("Unimplmented visitor visit")
+
+
+class StmtVisitor:
+    @staticmethod
+    def throw():
+        raise Exception("Unimplmented visitor method")
+
+    def expression(self, stmt: "Expression"):
+        StmtVisitor.throw()
+
+    def print(self, stmt: "Print"):
+        StmtVisitor.throw()
+
+    def let(self, stmt: "Let"):
+        StmtVisitor.throw()
+
 
 class Expression(Stmt):
     expr: Expr
