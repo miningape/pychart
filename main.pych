@@ -4,7 +4,7 @@ let y = 10;
 y = 20;
 
 if (y = false) {
-  print("one")
+  print("one");
 } elif (true) {
   print("Yay");
 } elif (false) {
@@ -12,6 +12,16 @@ if (y = false) {
 } else {
   print("OOF");
 }
+
+
+let x = 0;
+y = 10;
+
+while (x >= y) {
+  print(x);
+  x = x + 1;
+}
+
 
 print(y); // Error!!
 

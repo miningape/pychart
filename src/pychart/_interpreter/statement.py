@@ -81,3 +81,22 @@ class If(Stmt):
             self.if_body(environment)
         elif self.else_body and not test_result:
             self.else_body(environment)
+
+
+class While(Stmt):
+    
+    while_test: Expr
+    while_body: Stmt
+
+    def __init__(
+        self,
+        while_test: Expr,
+        while_body: Stmt,
+    ):
+        self.while_test = while_test
+        self.while_body = while_body
+
+    def __call__(self, environment: Environment):
+        while self.while_test(environment):
+            self.while_body(environment)
+        return None
