@@ -1,7 +1,6 @@
 from typing import Any
-
-from src.pychart._interpreter.environment import Environment
-from src.pychart._interpreter.resolver import Resolver
+from src.pychart._interpreter.visitors.resolver_visitor import Resolver
+from src.pychart._interpreter.ast_nodes.expression import State
 from ._interpreter.scanner import Scanner
 from ._interpreter.pyparser import Parser
 
@@ -16,13 +15,15 @@ def run(source: str):
         return None
 
     resolver = Resolver()
-    for statement in statements:
-        statement.visit(resolver)
+    resolver.resolve(statements)
+    resoltion_map = resolver.locals
+
+    state = State()
+    state.set_resolution_map(resoltion_map)
 
     try:
-        environment = Environment()
         for statement in statements:
-            last_value = statement(environment)
+            last_value = statement(state)
     except BaseException as err:
         print(f"Error: {err}")
         print("Exiting...")

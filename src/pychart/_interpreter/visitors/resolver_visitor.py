@@ -1,15 +1,17 @@
 from typing import Any, Dict, List, Union
 
 from pkg_resources import ResolutionError
-from src.pychart._interpreter.expression import Expr, ExprVisitor, Variable
-from src.pychart._interpreter.statement import Block, Let, Stmt, StmtVisitor
+from src.pychart._interpreter.ast_nodes.expression import Expr, ExprVisitor, Variable
+from src.pychart._interpreter.ast_nodes.statement import Block, Let, Stmt, StmtVisitor
 
 
 class Resolver(ExprVisitor, StmtVisitor):
     scopes: List[Dict[str, bool]]
+    locals: Dict[Expr, int]
 
     def __init__(self):
         self.scopes = [{}]
+        self.locals = {}
 
     def resolve(
         self, thing: Union[Union[List[Stmt], List[Expr]], Union[Stmt, Expr]]

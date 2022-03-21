@@ -1,10 +1,11 @@
-from typing import Any
-from src.pychart._interpreter.environment import Environment
+from typing import Any, Optional, Dict
+
+from src.pychart._interpreter.helpers.environment import Environment
 from src.pychart._interpreter.token_type import TokenType, Token
 
 
 class Expr:
-    def __call__(self, environment: Environment) -> Any:
+    def __call__(self, state: "State") -> Any:
         raise RuntimeError("Empty Expresson")
 
     def visit(self, visitor: "ExprVisitor") -> Any:
@@ -38,6 +39,19 @@ class ExprVisitor:
     # pylint: enable=unused-argument
 
 
+class State:
+    environment: Environment = Environment()
+    resolution_map: Dict["Expr", int] = {}
+
+    def __init__(self, enclosing: Optional["State"] = None):
+        if enclosing:
+            self.environment = Environment(enclosing.environment)
+            self.resolution_map = enclosing.resolution_map
+
+    def set_resolution_map(self, resolution_map: Dict[Expr, int]):
+        self.resolution_map = resolution_map
+
+
 def is_number(num: Any):
     typeof = type(num)
     return typeof == int or typeof == float
@@ -67,33 +81,33 @@ class Binary(Expr):
     def __str__(self) -> str:
         return f"( {self.operator} {str(self.left)}, {str(self.right)} )"
 
-    def __call__(self, environment: Environment) -> Any:
+    def __call__(self, state: State) -> Any:
         if self.operator.token_type == TokenType.STAR:
-            return self.left(environment) * self.right(environment)
+            return self.left(state) * self.right(state)
         elif self.operator.token_type == TokenType.SLASH:
-            return self.left(environment) / self.right(environment)
+            return self.left(state) / self.right(state)
         elif self.operator.token_type == TokenType.PLUS:
-            left = self.left(environment)
-            right = self.right(environment)
+            left = self.left(state)
+            right = self.right(state)
             state = is_number(left) == is_number(right)
 
             return left + right if state else str(left) + str(right)
         elif self.operator.token_type == TokenType.MINUS:
-            return self.left(environment) - self.right(environment)
+            return self.left(state) - self.right(state)
         elif self.operator.token_type == TokenType.GREATER_EQUAL:
-            return self.left(environment) >= self.right(environment)
+            return self.left(state) >= self.right(state)
         elif self.operator.token_type == TokenType.GREATER:
-            return self.left(environment) > self.right(environment)
+            return self.left(state) > self.right(state)
         elif self.operator.token_type == TokenType.LESSER_EQUAL:
-            return self.left(environment) <= self.right(environment)
+            return self.left(state) <= self.right(state)
         elif self.operator.token_type == TokenType.LESSER:
-            return self.left(environment) < self.right(environment)
+            return self.left(state) < self.right(state)
         elif self.operator.token_type == TokenType.EQUAL_EQUAL:
-            return self.left(environment) == self.right(environment)
+            return self.left(state) == self.right(state)
         elif self.operator.token_type == TokenType.EQUAL:
             raise RuntimeError("Not implemented.")
         elif self.operator.token_type == TokenType.BANG_EQUAL:
-            return self.left(environment) != self.right(environment)
+            return self.left(state) != self.right(state)
 
         raise RuntimeError("Call Binary Operator Undefined")
 
@@ -112,11 +126,11 @@ class Unary(Expr):
     def __str__(self) -> str:
         return f"( {self.operator} {str(self.right)} )"
 
-    def __call__(self, environment: Environment) -> Any:
+    def __call__(self, state: State) -> Any:
         if self.operator.token_type == TokenType.MINUS:
-            return 0 - self.right(environment)
+            return 0 - self.right(state)
         elif self.operator.token_type == TokenType.BANG:
-            return not self.right(environment)
+            return not self.right(state)
 
         raise RuntimeError("Call Unary Unefined")
 
@@ -133,7 +147,7 @@ class Literal(Expr):
     def __str__(self) -> str:
         return str(self.value)
 
-    def __call__(self, environment: Environment) -> Any:
+    def __call__(self, state: State) -> Any:
         return try_cast_int(self.value)
 
 
@@ -149,8 +163,8 @@ class Grouping(Expr):
     def __str__(self) -> str:
         return f"( {str(self.expr)} )"
 
-    def __call__(self, environment: Environment) -> Any:
-        return self.expr(environment)
+    def __call__(self, state: State) -> Any:
+        return self.expr(state)
 
 
 class Variable(Expr):
@@ -171,8 +185,8 @@ class Variable(Expr):
 
         return Variable(name)
 
-    def __call__(self, environment: Environment):
-        return environment.retrieve(self.name.lexeme)
+    def __call__(self, state: State):
+        return state.environment.retrieve(self.name.lexeme)
 
 
 class Assignment(Expr):
@@ -186,8 +200,8 @@ class Assignment(Expr):
         self.name = name
         self.initializer = initializer
 
-    def __call__(self, environment: Environment):
-        return environment.mutate(self.name.lexeme, self.initializer(environment))
+    def __call__(self, state: State):
+        return state.environment.mutate(self.name.lexeme, self.initializer(state))
 
 
 if __name__ == "__main__":
@@ -200,4 +214,4 @@ if __name__ == "__main__":
 
     print("Running expression for: -123 * (45.67)")
     print("Tree: \t", expre)
-    print("Result:\t", expre(Environment()))
+    print("Result:\t", expre(State()))

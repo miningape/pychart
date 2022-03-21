@@ -1,10 +1,9 @@
 from typing import List, Optional, Any
-from src.pychart._interpreter.environment import Environment
-from src.pychart._interpreter.expression import Expr, Token
+from src.pychart._interpreter.ast_nodes.expression import Expr, State, Token
 
 
 class Stmt:
-    def __call__(self, environment: Environment) -> Any:
+    def __call__(self, state: State) -> Any:
         raise RuntimeError("Expected Actual Statement")
 
     def visit(self, visitor: "StmtVisitor") -> Any:
@@ -41,8 +40,8 @@ class Expression(Stmt):
     def __init__(self, expr: Expr):
         self.expr = expr
 
-    def __call__(self, environment: Environment):
-        return self.expr(environment)
+    def __call__(self, state: State):
+        return self.expr(state)
 
 
 class Print(Stmt):
@@ -54,8 +53,8 @@ class Print(Stmt):
     def __init__(self, expr: Expr):
         self.expr = expr
 
-    def __call__(self, environment: Environment):
-        print(self.expr(environment))
+    def __call__(self, state: State):
+        print(self.expr(state))
         return None
 
 
@@ -70,12 +69,12 @@ class Let(Stmt):
         self.name = name
         self.initializer = initializer
 
-    def __call__(self, environment: Environment):
+    def __call__(self, state: State):
         value = None
         if self.initializer is not None:
-            value = self.initializer(environment)
+            value = self.initializer(state)
 
-        environment.reverve(self.name.lexeme, value)
+        state.environment.reverve(self.name.lexeme, value)
         return value
 
 
@@ -88,8 +87,8 @@ class Block(Stmt):
     def __init__(self, statements: List[Stmt]):
         self.statements = statements
 
-    def __call__(self, environment: Environment):
-        environment = Environment(environment)
+    def __call__(self, state: State):
+        block_state = State(state)
 
         for statement in self.statements:
-            statement(environment)
+            statement(block_state)
