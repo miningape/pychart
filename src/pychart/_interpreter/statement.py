@@ -83,6 +83,14 @@ class If(Stmt):
             self.else_body(environment)
 
 
+class pychBreakStatementExceptionJeffer(Exception):
+    pass
+
+class Break(Stmt):
+    def __call__(self, environment: Environment):
+        raise pychBreakStatementExceptionJeffer("The jeeffer did not correspond")
+
+
 class While(Stmt):
     
     test: Expr
@@ -93,10 +101,14 @@ class While(Stmt):
         test: Expr,
         body: Stmt,
     ):
-        self.test = while_test
-        self.body = while_body
+        self.test = test
+        self.body = body
 
     def __call__(self, environment: Environment):
         while self.test(environment):
-            self.body(environment)
+            try:
+                self.body(environment)
+            except pychBreakStatementExceptionJeffer:
+                break
         return None
+

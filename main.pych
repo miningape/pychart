@@ -17,12 +17,14 @@ if (y = false) {
 let x = 0;
 y = 10;
 
-while (x >= y) {
-  print(x);
+while (true) {
   x = x + 1;
+  print(x);
+  break;
 }
 
-
 print(y); // Error!!
+
+break;
 
 //print(x = 10);
