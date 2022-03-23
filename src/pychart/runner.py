@@ -1,8 +1,10 @@
 from typing import Any
-from src.pychart._interpreter.visitors.resolver_visitor import Resolver
-from src.pychart._interpreter.ast_nodes.expression import State
-from ._interpreter.scanner import Scanner
-from ._interpreter.pyparser import Parser
+from src.pychart._interpreter.visitors.interpreter import Interpreter
+from src.pychart._interpreter.visitors.resolver import Resolver
+from src.pychart._interpreter.scanner import Scanner
+from src.pychart._interpreter.pyparser import Parser
+
+# ! Need to remove State and change calls to use visitor
 
 
 def run(source: str):
@@ -14,17 +16,13 @@ def run(source: str):
     if statements is None:
         return None
 
-    resolver = Resolver()
-    resolver.resolve(statements)
-    resoltion_map = resolver.locals
-
-    state = State()
-    state.set_resolution_map(resoltion_map)
+    bindings = Resolver.variable_bindings(statements)
+    interpreter = Interpreter(bindings)
 
     try:
         for statement in statements:
-            last_value = statement(state)
-    except BaseException as err:
+            last_value = statement(interpreter)
+    except Exception as err:
         print(f"Error: {err}")
         print("Exiting...")
 

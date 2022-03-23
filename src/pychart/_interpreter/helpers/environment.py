@@ -9,22 +9,38 @@ class Environment:
         self.values = {}
         self.enclosing = enclosing
 
-    def retrieve(self, key: str) -> Any:
+    # Probably should merge this into earlier definitions mutate and reserve
+    def ancestor(self, depth: int):
+        environment = self
+        for _ in range(depth):
+            if not environment.enclosing:
+                raise RuntimeError("Resolver resolved deeper than currently exists")
+            environment = environment.enclosing
+
+        return environment
+
+    def get_at(self, depth: int, key: str) -> Any:
+        return self.ancestor(depth).get(key)
+
+    def set_at(self, depth: int, key: str, value: Any):
+        self.ancestor(depth).set(key, value)
+
+    def get(self, key: str) -> Any:
         if key in self.values:
-            return self.values.get(key)
+            return self.values[key]
 
         if self.enclosing is not None:
-            return self.enclosing.retrieve(key)
+            return self.enclosing.get(key)
 
         raise RuntimeError(f"Variable {key} is not defined")
 
-    def mutate(self, key: str, value: Any) -> Any:
+    def set(self, key: str, value: Any) -> Any:
         if key in self.values:
             self.values[key] = value
             return value
 
         if self.enclosing is not None:
-            return self.enclosing.mutate(key, value)
+            return self.enclosing.set(key, value)
 
         raise RuntimeError(f"Variable {key} not initialized")
 

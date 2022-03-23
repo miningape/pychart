@@ -4,11 +4,8 @@ let x = 10;
 x = 20;
 
 {
-  print(x);
-  let y = 20;
-  print(y);
+  let y = x;
+  print(y+1);
 }
 
-// print(y); // Error!!
-
-print(x = 10);
+print(x);
