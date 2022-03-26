@@ -1,5 +1,6 @@
 from typing import Any, List, Tuple
-from src.pychart._interpreter.environment import Environment
+
+from src.pychart._interpreter.helpers.environment import Environment
 
 
 class PychartCallable:
