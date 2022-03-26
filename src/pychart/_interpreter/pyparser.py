@@ -1,7 +1,14 @@
 from typing import List, Optional
-from src.pychart._interpreter.statement import Block, Expression, If, Print, Stmt, Let
 from src.pychart._interpreter.token_type import Token, TokenType
-from src.pychart._interpreter.expression import (
+from src.pychart._interpreter.ast_nodes.statement import (
+    Block,
+    Expression,
+    If,
+    Print,
+    Stmt,
+    Let,
+)
+from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
     Unary,

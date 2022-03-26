@@ -4,7 +4,7 @@ let y = 10;
 y = 20;
 
 if (y = false) {
-  print("one")
+  print("one");
 } elif (true) {
   print("Yay");
 } elif (false) {
