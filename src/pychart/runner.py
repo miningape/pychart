@@ -44,6 +44,10 @@ def run_prompt():
     except KeyboardInterrupt:
         print("\nKeyboard Interrupted")
         exit()
+        
+    except EOFError:
+        print()
+        exit()
 
 
 def run_file(filename: str):
