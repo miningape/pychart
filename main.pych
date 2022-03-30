@@ -1,7 +1,10 @@
-let name = input("Name?\n");
-
-func say(header, body) {
-  print(header, body);
+func makeCounter () {
+  let count = 0;
+  func counter() {
+    count = count + 1;
+  }
 }
 
-say("Hello", name);
+let count = makeCounter();
+print(count());
+print(count());

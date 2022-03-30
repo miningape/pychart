@@ -1,5 +1,4 @@
 from typing import Any, List, Tuple
-from src.pychart._interpreter.environment import Environment
 
 
 class PychartCallable:
@@ -9,7 +8,7 @@ class PychartCallable:
             return expr
         raise RuntimeError("Could not convert to callable.")
 
-    def __call__(self, environment: Environment, args: List[Any]) -> Any:
+    def __call__(self, args: List[Any]) -> Any:
         raise RuntimeError("Cannot call base callable.")
 
     def arity(self, args: List[Any]) -> Tuple[bool, str]:
@@ -17,7 +16,7 @@ class PychartCallable:
 
 
 class InputFunc(PychartCallable):
-    def __call__(self, _: Environment, args: List[Any]) -> Any:
+    def __call__(self, args: List[Any]) -> Any:
         return input(*args)
 
     def arity(self, args: List[Any]) -> Tuple[bool, str]:
@@ -25,7 +24,7 @@ class InputFunc(PychartCallable):
 
 
 class PrintFunc(PychartCallable):
-    def __call__(self, _: Environment, args: List[Any]) -> Any:
+    def __call__(self, args: List[Any]) -> Any:
         print(*args)
         return None
 
