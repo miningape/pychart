@@ -108,7 +108,7 @@ class While(Stmt):
         while self.test(environment):
             try:
                 self.body(environment)
-            except pychBreakStatementExceptionJeffer:
+            except BreakStatementException:
                 break
         return None
 
