@@ -1,24 +1,32 @@
-from ._interpreter.scanner import Scanner
-from ._interpreter.pyparser import Parser
+from typing import Any
+from src.pychart._interpreter.visitors.interpreter import Interpreter
+from src.pychart._interpreter.visitors.resolver import Resolver
+from src.pychart._interpreter.scanner import Scanner
+from src.pychart._interpreter.pyparser import Parser
+
+# ! Need to remove State and change calls to use visitor
 
 
 def run(source: str):
     scanner = Scanner(source)
     tokens = scanner.get_tokens()
-    ast = Parser(tokens).parse()
+    statements = Parser(tokens).parse()
+    last_value: Any = None
 
-    if ast is None:
-        return
+    if statements is None:
+        return None
 
-    value = ast()
+    bindings = Resolver.variable_bindings(statements)
+    interpreter = Interpreter(bindings)
 
     try:
-        value = int(value)
-    except:
-        pass
+        for statement in statements:
+            last_value = statement(interpreter)
+    except Exception as err:
+        print(f"Error: {err}")
+        print("Exiting...")
 
-    # print(f"AST: {ast}")
-    print(value)
+    return last_value
 
 
 def run_prompt():
@@ -32,8 +40,11 @@ def run_prompt():
 
             run(statement)
 
+            result = run(line)
+            if result:
+                print(result)
     except KeyboardInterrupt:
-        print()
+        print("Keyboard Interrupt")
         exit()
 
 

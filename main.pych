@@ -1,0 +1,11 @@
+print("Hello World!");
+
+let x = 10;
+x = 20;
+
+{
+  let y = x;
+  print(y+1);
+}
+
+print(x);

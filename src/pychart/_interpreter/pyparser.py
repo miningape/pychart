@@ -1,7 +1,21 @@
-from typing import List
-
-from .token_type import Token, TokenType
-from .expression import Binary, Expr, Unary, Literal, Grouping
+from typing import List, Optional
+from src.pychart._interpreter.ast_nodes.statement import (
+    Block,
+    Expression,
+    Print,
+    Stmt,
+    Let,
+)
+from src.pychart._interpreter.token_type import Token, TokenType
+from src.pychart._interpreter.ast_nodes.expression import (
+    Assignment,
+    Binary,
+    Unary,
+    Grouping,
+    Expr,
+    Literal,
+    Variable,
+)
 
 
 class Parser:
@@ -12,11 +26,65 @@ class Parser:
         self.tokens = tokens
 
     def parse(self):
+        statements: List[Stmt] = []
+
         try:
-            return self.expression()
+            while not self.is_at_end():
+                statements.append(self.declaration())
         except RuntimeError:
             print("Error occurred")
             return None
+
+        return statements
+
+    def declaration(self) -> Stmt:
+        if self.match(TokenType.LET):
+            return self.var_declaration()
+
+        return self.statement()
+
+    def var_declaration(self) -> Stmt:
+        name = self.consume(TokenType.IDENTIFIER, "Expected a variable name")
+
+        initializer: Optional[Expr] = None
+
+        if self.match(TokenType.EQUAL):
+            initializer = self.expression()
+
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after variable declaration')
+        return Let(name, initializer)
+
+    def statement(self) -> Stmt:
+        if self.match(TokenType.PRINT):
+            return self.print_statement()
+        if self.match(TokenType.LEFT_BRACE):
+            return Block(self.block())
+
+        return self.expression_statement()
+
+    def expression_statement(self) -> Stmt:
+        expr = self.expression()
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
+        return Expression(expr)
+
+    def print_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')
+        expr = self.expression()
+        self.consume(
+            TokenType.RIGHT_PEREN, 'Expected ")" after expression in print call'
+        )
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
+        return Print(expr)
+
+    def block(self) -> List[Stmt]:
+        statements: List[Stmt] = []
+
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
+            statements.append(self.declaration())
+
+        self.consume(TokenType.RIGHT_BRACE, 'Expected "}" after block')
+
+        return statements
 
     def previous(self) -> Token:
         return self.tokens[self.current - 1]
@@ -53,13 +121,28 @@ class Parser:
 
     def error(self, token: Token, message: str):
         if token.token_type == TokenType.EOF:
-            print("Is at end")
+            print(f"At end of line: {message}")
         else:
-            print(f"{token.line} at end. {message}")
+            print(f"Line {token.line}, unable to match. {message}")
         raise RuntimeError()
 
     def expression(self) -> Expr:
-        return self.equality()
+        return self.assignment()
+
+    def assignment(self) -> Expr:
+        expr = self.equality()
+
+        if self.match(TokenType.EQUAL):
+            equals = self.previous()
+            value = self.assignment()
+
+            if type(expr).__name__ == Variable.__name__:
+                var = Variable.from_expr(expr)
+                return Assignment(var.name, value)
+
+            self.error(equals, "Could not assign target")
+
+        return expr
 
     def equality(self) -> Expr:
         expr = self.comparison()
@@ -135,4 +218,7 @@ class Parser:
             self.consume(TokenType.RIGHT_PEREN, "Cannot match )")
             return Grouping(expr)
 
-        self.error(self.peek(), "Expect expression")
+        if self.match(TokenType.IDENTIFIER):
+            return Variable(self.previous())
+
+        self.error(self.peek(), "Could not match to an expression")
