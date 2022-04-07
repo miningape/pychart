@@ -4,6 +4,18 @@ import argparse
 from .runner import run_prompt, run_file
 
 def main():
+    """
+    The default entrypoint for the pychart-lang 
+
+    usage: pychart [-h] [--version] [file]
+
+    positional arguments:
+      file           run a pychart file
+
+    optional arguments:
+      -h, --help     show this help message and exit
+      --version, -V
+    """
     parser = argparse.ArgumentParser(prog='pychart')
     parser.add_argument('file', nargs='?', help='run a pychart file')
     parser.add_argument('--version', '-V', action='store_true')
