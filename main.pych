@@ -1,10 +1,14 @@
-func makeCounter () {
-  let count = 0;
-  func counter() {
-    count = count + 1;
-  }
-}
+let a = "Name fuckdace";
 
-let count = makeCounter();
-print(count());
-print(count());
+{
+  func doA() {
+    print(a);
+  }
+
+  
+
+  doA();
+  let a = 5;
+  a = 20;
+  doA();
+}
