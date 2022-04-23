@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Any, Dict, List, Tuple
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
@@ -48,7 +47,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if depth is None:
             raise RuntimeError(f"SET: Could not resolve variable: '{name.lexeme}'")
 
-        self.environment.set_at(depth, name.lexeme, value)
+        return self.environment.set_at(depth, name.lexeme, value)
 
     # Expression Visitor
     def binary(self, expr: Binary) -> Any:
@@ -112,6 +111,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         args: List[Any] = []
         for arg in expr.arguments:
+            # Evaluate arg then append
             args.append(arg(self))
 
         # Coercing type
@@ -173,7 +173,7 @@ class PychartFunction(PychartCallable):
     ) -> None:
         self.definition = definition
         self.interpreter = interpreter
-        self.closure = deepcopy(interpreter.environment)
+        self.closure = interpreter.environment
 
     def __str__(self) -> str:
         return f'<Function "{self.definition.name.lexeme}">'

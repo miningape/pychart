@@ -171,9 +171,8 @@ class Parser:
             equals = self.previous()
             value = self.assignment()
 
-            if type(expr).__name__ == Variable.__name__:
-                var = Variable.from_expr(expr)
-                return Assignment(var.name, value)
+            if isinstance(expr, Variable):
+                return Assignment(expr.name, value)
 
             self.error(equals, "Could not assign target")
 

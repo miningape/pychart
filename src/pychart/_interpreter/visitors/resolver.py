@@ -51,7 +51,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         else:  # Else because python typing is shit
             return thing(self)
 
-    def resolve_local(self, expr: Expr, name: Token):
+    def resolve_local(self, expr: Union[Variable, Assignment], name: Token):
         i = len(self.scopes) - 1
         while i >= 0:
             if self.scopes[i].get(name.lexeme) is not None:

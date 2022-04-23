@@ -1,10 +1,10 @@
 from typing import Any, List, Tuple
-from src.pychart._interpreter.callable import PychartCallable
-from src.pychart._interpreter.environment import Environment
+
+from src.pychart._interpreter.helpers.callable import PychartCallable
 
 
 class PychartFileIO(PychartCallable):
-    def __call__(self, _: Environment, args: List[Any]) -> Any:
+    def __call__(self, args: List[Any]) -> Any:
         try:
             operation = str(args[0])
         except:
@@ -29,13 +29,13 @@ class PychartFileIO(PychartCallable):
         except:
             raise RuntimeError(f"Cannot convert '{args[1]}' to string")
 
-        return callablefn(_, [filename])
+        return callablefn([filename])
 
     def arity(self, args: List[Any]) -> Tuple[bool, str]:
         return (not (len(args) == 2 or len(args) == 1), "Takes 2 args")
 
     class Write(PychartCallable):
-        def __call__(self, environment: Environment, args: List[Any]) -> Any:
+        def __call__(self, args: List[Any]) -> Any:
             try:
                 filename = str(args[0])
                 contents = str(args[1])
@@ -49,7 +49,7 @@ class PychartFileIO(PychartCallable):
             return (len(args) != 2, "Write takes 2 arguments")
 
     class Read(PychartCallable):
-        def __call__(self, _: Environment, args: List[Any]) -> str:
+        def __call__(self, args: List[Any]) -> str:
             try:
                 filename = str(args[0])
             except:
