@@ -1,4 +1,4 @@
-from typing import List, Optional, Any, Tuple
+from typing import List, Optional, Any
 
 from src.pychart._interpreter.ast_nodes.expression import Expr
 from src.pychart._interpreter.token_type.token import Token
@@ -6,13 +6,13 @@ from src.pychart._interpreter.token_type.token import Token
 
 class Stmt:
     def __call__(self, visitor: "StmtVisitor") -> Any:
-        raise RuntimeError("Expected Actual Statement")
+        raise RuntimeError("Expected Stmt")
 
 
 class StmtVisitor:
     @staticmethod
     def throw():
-        raise Exception("Unimplmented visitor method")
+        raise Exception("Unimplemented Stmt Visitor")
 
     # pylint: disable=unused-argument
     def expression(self, stmt: "Expression") -> Any:
@@ -87,3 +87,4 @@ class Function(Stmt):
 
     def __call__(self, visitor: StmtVisitor) -> Any:
         return visitor.function(self)
+
