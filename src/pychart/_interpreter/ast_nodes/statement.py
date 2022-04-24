@@ -97,16 +97,10 @@ class If(Stmt):
     if_body: Stmt
     else_body: Optional[Stmt]
 
-    def __init__(
-        self,
-        if_test: Expr,
-        if_body: Stmt,
-        else_body: Optional[Stmt],
-    ):
+    def __init__(self, if_test: Expr, if_body: Stmt, else_body: Optional[Stmt]):
         self.if_test = if_test
         self.if_body = if_body
-
         self.else_body = else_body
 
-    def __call__(self, visitor: StmtVisitor):
+    def __call__(self, visitor: StmtVisitor) -> Any:
         return visitor.if_stmt(self)

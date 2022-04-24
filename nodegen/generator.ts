@@ -74,6 +74,11 @@ const variables: variableType = {
         params: "List[Token]",
         body: "List[Stmt]",
       },
+      If: {
+        if_test: "Expr",
+        if_body: "Stmt",
+        else_body: "Optional[Stmt]",
+      },
     },
   },
 };
@@ -90,7 +95,10 @@ class ${className}:
 }
 
 function makeVisitorMethod(baseClassName: string, className: string) {
-  return `    def ${className.toLowerCase()}(self, ${baseClassName.toLowerCase()}: "${className}") -> Any:
+  let name = className.toLowerCase();
+  return `    def ${
+    name === "if" ? "if_stmt" : name
+  }(self, ${baseClassName.toLowerCase()}: "${className}") -> Any:
         ${baseClassName}Visitor.throw()`;
 }
 
@@ -116,6 +124,7 @@ function makeSubClass(
   className: string,
   args: [string, string][]
 ) {
+  let name = className.toLowerCase();
   return `
 class ${className}(${baseClassName}):
 ${args.map(([field, type]) => `    ${field}: ${type}`).join("\n")}
@@ -126,7 +135,7 @@ ${args.map(([field, type]) => `    ${field}: ${type}`).join("\n")}
 ${args.map(([field]) => `        self.${field} = ${field}`).join("\n")}
 
     def __call__(self, visitor: ${baseClassName}Visitor) -> Any:
-        return visitor.${className.toLowerCase()}(self)
+        return visitor.${name === "if" ? "if_stmt" : name}(self)
 
 `;
 }
