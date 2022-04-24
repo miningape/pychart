@@ -163,5 +163,5 @@ Object.entries(variables).forEach(([className, definition]) => {
   console.log(output.trim() + "\n");
 
   const filePath = path.join(directory, definition.filename);
-  fs.writeFileSync(filePath, output);
+  fs.writeFileSync(filePath, output.trim() + "\n");
 });
