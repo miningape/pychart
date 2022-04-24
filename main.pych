@@ -1,3 +1,16 @@
-let name = input("Name?\n");
+let y = 10;
+y = 20;
 
-print("Hello " + name);
+if (y = false) {
+  print("one");
+} elif (true) {
+  print("Yay");
+} elif (false) {
+  print("Nay");
+} else {
+  print("OOF");
+}
+
+print(y); // Error!!
+
+//print(x = 10);

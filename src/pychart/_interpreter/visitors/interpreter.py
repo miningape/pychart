@@ -13,6 +13,7 @@ from src.pychart._interpreter.ast_nodes.expression import (
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
     Expression,
+    If,
     Let,
     Print,
     StmtVisitor,
@@ -150,3 +151,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
             statement(self)
 
         self.environment = previous
+
+    def if_stmt(self, stmt: If) -> Any:
+        test_result = stmt.if_test(self)
+        if test_result:
+            stmt.if_body(self)
+        elif stmt.else_body:
+            stmt.else_body(self)
