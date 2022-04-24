@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 from src.pychart._interpreter.helpers.callable import (
     InputFunc,
     PrintFunc,
@@ -16,10 +16,8 @@ native_functions: Dict[str, PychartCallable] = {
 
 
 def run(source: str):
-    scanner = Scanner(source)
-    tokens = scanner.get_tokens()
+    tokens = Scanner(source).get_tokens()
     statements = Parser(tokens).parse()
-    last_value: Any = None
 
     if statements is None:
         return None
@@ -29,6 +27,8 @@ def run(source: str):
 
     for (name, callablefn) in native_functions.items():
         interpreter.environment.reverve(name, callablefn)
+
+    last_value: Any = None
 
     try:
         for statement in statements:

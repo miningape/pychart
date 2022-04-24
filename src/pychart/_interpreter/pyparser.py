@@ -3,6 +3,7 @@ from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
     Expression,
+    Function,
     If,
     Print,
     Stmt,
@@ -57,6 +58,10 @@ class Parser:
         return Let(name, initializer)
 
     def statement(self) -> Stmt:
+        # if self.match(TokenType.PRINT):
+        # return self.print_statement()
+        if self.match(TokenType.FUNCTION):
+            return self.function()
         if self.match(TokenType.IF):
             return self.if_statement()
         if self.match(TokenType.LEFT_BRACE):
@@ -99,6 +104,36 @@ class Parser:
         )
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Print(expr)
+
+    def function(self) -> Stmt:
+        name = self.consume(
+            TokenType.IDENTIFIER, "Expected Identifier after FUNC keyword"
+        )
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after FUNC Identifier')
+
+        params: List[Token] = []
+        if not self.check(TokenType.RIGHT_PEREN):
+            params.append(
+                self.consume(TokenType.IDENTIFIER, "Expected identifier in arg list")
+            )
+
+            while self.match(TokenType.COMMA):
+                if len(params) > 127:
+                    self.error(self.peek(), "Too many arguments for function, max 127")
+
+                params.append(
+                    self.consume(
+                        TokenType.IDENTIFIER, "Expected identifier in arg list"
+                    )
+                )
+
+        self.consume(TokenType.RIGHT_PEREN, 'Expected ")" after argument list')
+        self.consume(
+            TokenType.LEFT_BRACE, 'Expected "{" after arg list in FUNC declaration'
+        )
+        body = self.block()
+
+        return Function(name, params, body)
 
     def block(self) -> List[Stmt]:
         statements: List[Stmt] = []
@@ -160,9 +195,8 @@ class Parser:
             equals = self.previous()
             value = self.assignment()
 
-            if type(expr).__name__ == Variable.__name__:
-                var = Variable.from_expr(expr)
-                return Assignment(var.name, value)
+            if isinstance(expr, Variable):
+                return Assignment(expr.name, value)
 
             self.error(equals, "Could not assign target")
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
@@ -13,6 +13,7 @@ from src.pychart._interpreter.ast_nodes.expression import (
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
     Expression,
+    Function,
     If,
     Let,
     Print,
@@ -47,7 +48,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if depth is None:
             raise RuntimeError(f"SET: Could not resolve variable: '{name.lexeme}'")
 
-        self.environment.set_at(depth, name.lexeme, value)
+        return self.environment.set_at(depth, name.lexeme, value)
 
     # Expression Visitor
     def binary(self, expr: Binary) -> Any:
@@ -111,6 +112,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         args: List[Any] = []
         for arg in expr.arguments:
+            # Evaluate arg then append
             args.append(arg(self))
 
         # Coercing type
@@ -123,7 +125,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 # f"Too many arguments for function expected {callable_fn.arity()} but got {len(args)}"
             )
 
-        return callable_fn(self.environment, args)
+        return callable_fn(args)
 
     # Statement Visitor
     def expression(self, stmt: Expression) -> Any:
@@ -152,9 +154,58 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         self.environment = previous
 
+    def function(self, stmt: Function) -> Any:
+        # print(self.environment.values)
+        fncallable = PychartFunction(stmt, self)
+
+        self.environment.reverve(stmt.name.lexeme, fncallable)
+        return fncallable
+
     def if_stmt(self, stmt: If) -> Any:
         test_result = stmt.if_test(self)
         if test_result:
             stmt.if_body(self)
         elif stmt.else_body:
             stmt.else_body(self)
+
+
+class PychartFunction(PychartCallable):
+    definition: Function
+    interpreter: Interpreter
+    closure: Environment
+
+    def __init__(
+        self,
+        definition: Function,
+        interpreter: Interpreter,
+    ) -> None:
+        self.definition = definition
+        self.interpreter = interpreter
+        self.closure = interpreter.environment
+
+    def __str__(self) -> str:
+        return f'<Function "{self.definition.name.lexeme}">'
+
+    def __call__(self, args: List[Any]) -> Any:
+        previous = self.interpreter.environment
+        self.interpreter.environment = Environment(self.closure)
+
+        # pylint: disable=consider-using-enumerate
+        for i in range(len(args)):
+            self.interpreter.environment.reverve(
+                self.definition.params[i].lexeme, args[i]
+            )
+        # pylint: enable=consider-using-enumerate
+
+        last = None
+        for statement in self.definition.body:
+            last = statement(self.interpreter)
+
+        self.interpreter.environment = previous
+        return last
+
+    def arity(self, args: List[Any]) -> Tuple[bool, str]:
+        return (
+            len(self.definition.params) != len(args),
+            f"Wrong amount of args used to call {self.definition.name.lexeme}, expected {len(self.definition.params)} got {len(args)}",
+        )

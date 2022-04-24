@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@types/node": "^17.0.25"
+  },
+  "scripts": {
+    "nodegen": "tsc && node generator.js"
+  }
+}

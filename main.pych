@@ -1,3 +1,18 @@
+let a = "Name fuckdace";
+
+{
+  func doA() {
+    print(a);
+  }
+
+  
+
+  doA();
+  let a = 5;
+  a = 20;
+  doA();
+}
+
 let y = 10;
 y = 20;
 
