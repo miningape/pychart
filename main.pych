@@ -12,3 +12,20 @@ let a = "Name fuckdace";
   a = 20;
   doA();
 }
+
+let y = 10;
+y = 20;
+
+if (y = false) {
+  print("one");
+} elif (true) {
+  print("Yay");
+} elif (false) {
+  print("Nay");
+} else {
+  print("OOF");
+}
+
+print(y); // Error!!
+
+//print(x = 10);

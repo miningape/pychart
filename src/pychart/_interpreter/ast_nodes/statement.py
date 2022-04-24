@@ -30,6 +30,9 @@ class StmtVisitor:
     def function(self, stmt: "Function") -> Any:
         StmtVisitor.throw()
 
+    def if_stmt(self, stmt: "If") -> Any:
+        StmtVisitor.throw()
+
     # pylint: enable=unused-argument
 
 
@@ -88,3 +91,22 @@ class Function(Stmt):
     def __call__(self, visitor: StmtVisitor) -> Any:
         return visitor.function(self)
 
+
+class If(Stmt):
+    if_test: Expr
+    if_body: Stmt
+    else_body: Optional[Stmt]
+
+    def __init__(
+        self,
+        if_test: Expr,
+        if_body: Stmt,
+        else_body: Optional[Stmt],
+    ):
+        self.if_test = if_test
+        self.if_body = if_body
+
+        self.else_body = else_body
+
+    def __call__(self, visitor: StmtVisitor):
+        return visitor.if_stmt(self)

@@ -14,6 +14,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Block,
     Expression,
     Function,
+    If,
     Let,
     Print,
     StmtVisitor,
@@ -159,6 +160,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         self.environment.reverve(stmt.name.lexeme, fncallable)
         return fncallable
+
+    def if_stmt(self, stmt: If) -> Any:
+        test_result = stmt.if_test(self)
+        if test_result:
+            stmt.if_body(self)
+        elif stmt.else_body:
+            stmt.else_body(self)
 
 
 class PychartFunction(PychartCallable):

@@ -15,6 +15,7 @@ from src.pychart._interpreter.ast_nodes.expression import (
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
     Function,
+    If,
     Let,
     Print,
     Stmt,
@@ -142,4 +143,10 @@ class Resolver(ExprVisitor, StmtVisitor):
             self.define(param.lexeme)
         self.resolve(stmt.body)
         self.close_scope()
+
+    def if_stmt(self, stmt: If) -> Any:
+        self.resolve(stmt.if_test)
+        self.resolve(stmt.if_body)
+        if stmt.else_body:
+            self.resolve(stmt.else_body)
         return None
