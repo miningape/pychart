@@ -32,7 +32,7 @@ class Scanner:
         "let": TokenType.LET,
         "false": TokenType.FALSE,
         "true": TokenType.TRUE,
-        "print": TokenType.PRINT,
+        # "print": TokenType.PRINT,
     }
 
     def __init__(self, program_text: str):

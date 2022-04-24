@@ -1,7 +1,8 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
+    Call,
     Expr,
     ExprVisitor,
     Grouping,
@@ -17,6 +18,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Print,
     StmtVisitor,
 )
+from src.pychart._interpreter.helpers.callable import PychartCallable
 from src.pychart._interpreter.helpers.environment import Environment
 from src.pychart._interpreter.helpers.number_helpers import is_number, try_cast_int
 from src.pychart._interpreter.token_type.token import Token
@@ -103,6 +105,25 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.set(expr.name, expr, value)
 
         return value
+
+    def call(self, expr: Call) -> Any:
+        callee_eval: Any = expr.callee(self)
+
+        args: List[Any] = []
+        for arg in expr.arguments:
+            args.append(arg(self))
+
+        # Coercing type
+        callable_fn = PychartCallable.from_expr(callee_eval)
+
+        error, message = callable_fn.arity(args)
+        if error:
+            raise RuntimeError(
+                message
+                # f"Too many arguments for function expected {callable_fn.arity()} but got {len(args)}"
+            )
+
+        return callable_fn(self.environment, args)
 
     # Statement Visitor
     def expression(self, stmt: Expression) -> Any:

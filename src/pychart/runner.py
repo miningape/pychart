@@ -1,10 +1,18 @@
-from typing import Any
+from typing import Any, Dict, List
+from src.pychart._interpreter.helpers.callable import (
+    InputFunc,
+    PrintFunc,
+    PychartCallable,
+)
 from src.pychart._interpreter.visitors.interpreter import Interpreter
 from src.pychart._interpreter.visitors.resolver import Resolver
 from src.pychart._interpreter.scanner import Scanner
 from src.pychart._interpreter.pyparser import Parser
 
-# ! Need to remove State and change calls to use visitor
+native_functions: Dict[str, PychartCallable] = {
+    "input": InputFunc(),
+    "print": PrintFunc(),
+}
 
 
 def run(source: str):
@@ -16,8 +24,11 @@ def run(source: str):
     if statements is None:
         return None
 
-    bindings = Resolver.variable_bindings(statements)
+    bindings = Resolver.variable_bindings(statements, list(native_functions.keys()))
     interpreter = Interpreter(bindings)
+
+    for (name, callablefn) in native_functions.items():
+        interpreter.environment.reverve(name, callablefn)
 
     try:
         for statement in statements:

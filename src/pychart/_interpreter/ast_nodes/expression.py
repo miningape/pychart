@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 from src.pychart._interpreter.token_type import TokenType, Token
 
 
@@ -29,6 +29,9 @@ class ExprVisitor:
         ExprVisitor.throw()
 
     def assignment(self, expr: "Assignment") -> Any:
+        ExprVisitor.throw()
+
+    def call(self, expr: "Call") -> Any:
         ExprVisitor.throw()
 
     # pylint: enable=unused-argument
@@ -121,6 +124,18 @@ class Assignment(Expr):
 
     def __call__(self, visitor: ExprVisitor):
         return visitor.assignment(self)
+
+
+class Call(Expr):
+    callee: Expr
+    arguments: List[Expr]
+
+    def __init__(self, callee: Expr, arguments: List[Expr]):
+        self.callee = callee
+        self.arguments = arguments
+
+    def __call__(self, visitor: ExprVisitor):
+        return visitor.call(self)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from pkg_resources import ResolutionError
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
+    Call,
     Expr,
     ExprVisitor,
     Grouping,
@@ -32,8 +33,11 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.locals = {}
 
     @staticmethod
-    def variable_bindings(stmts: List[Stmt]):
+    def variable_bindings(stmts: List[Stmt], native: List[str]):
         resolver = Resolver()
+        for name in native:
+            resolver.scopes[0][name] = True
+
         resolver.resolve(stmts)
 
         return resolver.locals
@@ -97,6 +101,14 @@ class Resolver(ExprVisitor, StmtVisitor):
         return None
 
     def literal(self, expr: Literal) -> Any:
+        return None
+
+    def call(self, expr: Call) -> Any:
+        self.resolve(expr.callee)
+
+        for arg in expr.arguments:
+            self.resolve(arg)
+
         return None
 
     # StmtVisitor

@@ -11,6 +11,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
+    Call,
     Unary,
     Grouping,
     Expr,
@@ -32,8 +33,8 @@ class Parser:
         try:
             while not self.is_at_end():
                 statements.append(self.declaration())
-        except RuntimeError:
-            print("Error occurred")
+        except RuntimeError as err:
+            print("Error occurred", err)
             return None
 
         return statements
@@ -58,8 +59,6 @@ class Parser:
     def statement(self) -> Stmt:
         if self.match(TokenType.IF):
             return self.if_statement()
-        if self.match(TokenType.PRINT):
-            return self.print_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
 
@@ -225,7 +224,33 @@ class Parser:
 
             return Unary(operator, right)
 
-        return self.primary()
+        return self.call()
+
+    def call(self) -> Expr:
+        expr = self.primary()
+
+        while True:
+            if self.match(TokenType.LEFT_PEREN):
+                expr = self.finish_call(expr)
+            else:
+                break
+
+        return expr
+
+    def finish_call(self, callee: Expr) -> Expr:
+        args: List[Expr] = []
+
+        if not self.check(TokenType.RIGHT_PEREN):
+            args.append(self.expression())
+
+            while self.match(TokenType.COMMA):
+                if len(args) > 127:
+                    self.error(self.peek(), "Too many arguments in function, max 127")
+                args.append(self.expression())
+
+        self.consume(TokenType.RIGHT_PEREN, 'Expected ")" after function arguments.')
+
+        return Call(callee, args)
 
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):
