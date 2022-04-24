@@ -135,5 +135,5 @@ class Interpreter(ExprVisitor, StmtVisitor):
         test_result = stmt.if_test(self)
         if test_result:
             stmt.if_body(self)
-        elif stmt.else_body and not test_result:
+        elif stmt.else_body:
             stmt.else_body(self)
