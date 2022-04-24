@@ -1,12 +1,13 @@
 from typing import List, Optional
+from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
     Expression,
+    If,
     Print,
     Stmt,
     Let,
 )
-from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
@@ -55,6 +56,8 @@ class Parser:
         return Let(name, initializer)
 
     def statement(self) -> Stmt:
+        if self.match(TokenType.IF):
+            return self.if_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
         if self.match(TokenType.LEFT_BRACE):
@@ -66,6 +69,28 @@ class Parser:
         expr = self.expression()
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Expression(expr)
+
+    def if_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after IF keyword')
+        if_test = self.expression()
+        self.consume(
+            TokenType.RIGHT_PEREN, 'Expected ")" after expression in IF statement'
+        )
+
+        if_body = self.statement()
+        else_body = None
+
+        matched_elif = False
+        if self.match(TokenType.ELIF):
+            matched_elif = True
+            else_body = self.if_statement()
+
+        if self.match(TokenType.ELSE):
+            if matched_elif:
+                raise RuntimeError("Only 1 ELSE can be after an IF")
+            else_body = self.statement()
+
+        return If(if_test, if_body, else_body)
 
     def print_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')

@@ -27,6 +27,9 @@ class StmtVisitor:
     def block(self, stmt: "Block") -> Any:
         StmtVisitor.throw()
 
+    def if_stmt(self, stmt: "If") -> Any:
+        StmtVisitor.throw()
+
     # pylint: enable=unused-argument
 
 
@@ -70,3 +73,23 @@ class Block(Stmt):
 
     def __call__(self, visitor: StmtVisitor) -> Any:
         return visitor.block(self)
+
+
+class If(Stmt):
+    if_test: Expr
+    if_body: Stmt
+    else_body: Optional[Stmt]
+
+    def __init__(
+        self,
+        if_test: Expr,
+        if_body: Stmt,
+        else_body: Optional[Stmt],
+    ):
+        self.if_test = if_test
+        self.if_body = if_body
+
+        self.else_body = else_body
+
+    def __call__(self, visitor: StmtVisitor):
+        return visitor.if_stmt(self)

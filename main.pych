@@ -1,11 +1,18 @@
 print("Hello World!");
 
-let x = 10;
-x = 20;
+let y = 10;
+y = 20;
 
-{
-  let y = x;
-  print(y+1);
+if (y = false) {
+  print("one");
+} elif (true) {
+  print("Yay");
+} elif (false) {
+  print("Nay");
+} else {
+  print("OOF");
 }
 
-print(x);
+print(y); // Error!!
+
+//print(x = 10);

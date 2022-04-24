@@ -24,6 +24,7 @@ class Scanner:
     keywords: Dict[str, TokenType] = {
         "if": TokenType.IF,
         "else": TokenType.ELSE,
+        "elif": TokenType.ELIF,
         "func": TokenType.FUNCTION,
         "return": TokenType.RETURN,
         "while": TokenType.WHILE,
