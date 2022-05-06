@@ -45,6 +45,6 @@ def is_list_of(element_type: type, value: Any) -> bool:
     return True
 
 class Bytecode:
-    code : int 
-    def __init__(self, code):
+    code : Mnemonics 
+    def __init__(self, code: Mnemonics):
         self.code = code
