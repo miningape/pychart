@@ -1,3 +1,13 @@
+let p = -10;
+print("  p: ", p);
+p = -p;
+print("- p: ", p);
+p = -!p;
+print("-!p: ", p);
+p = 10;
+p = -(p + 5);
+print("-(p + 5): ", p);
+
 let a = "Name fuckdace";
 
 {

@@ -7,12 +7,41 @@ from src.pychart._interpreter.helpers.callable import (
 from src.pychart._interpreter.visitors.interpreter import Interpreter
 from src.pychart._interpreter.visitors.resolver import Resolver
 from src.pychart._interpreter.scanner import Scanner
+from src.pychart._interpreter.visitors.bytecode_generator import *
 from src.pychart._interpreter.pyparser import Parser
+from src.pychart.bytecode.bytecodes import *
+from src.pychart.bytecode.interpreter import *
+from src.pychart.bytecode.printer import *
 
 native_functions: Dict[str, PychartCallable] = {
     "input": InputFunc(),
     "print": PrintFunc(),
 }
+
+def run_bytecode(filename: str, should_print: bool):
+    source = None
+    with open(filename, "r", encoding="utf-8") as contents:
+        source = contents.read()
+
+    tokens = Scanner(source).get_tokens()
+    statements = Parser(tokens).parse()
+
+    if statements is None:
+        return None
+
+    generator = BytecodeGenerator(statements, list(native_functions.keys()))
+    bytecodes = generator.generate()
+
+    if bytecodes is None:
+        return None
+
+    if should_print:
+        BytecodePrinter().print(bytecodes)
+
+    interp = BytecodeInterpreter()
+    for (name, callablefn) in native_functions.items():
+        interp.push(name, callablefn.bytecode_execute)
+    return interp.execute(bytecodes)
 
 
 def run(source: str):

@@ -14,7 +14,7 @@ add    a, a, b  ; add the variables 'a', 'b', and store it in 'a'
 ; except for unary operators they are 'op ret, var' 
 call   c, [a, b]; call the function 'c' with the arguments 'a' and 'b'
 
-; define 'identifer' as a function 
+; define 'identifier' as a function 
 func a [arg0, arg1, arg2]
 create result
 gt  result, arg0, arg2 
@@ -36,8 +36,18 @@ ret  arg0; returns null
 ;  jump "if line number file end"
 ;   --- this is the end of the if condition
 ;
+; this means in reality the function above looks something like this
+func a [arg0, arg1, arg2]
+create result
+gt  result, arg0, arg2 
+jnz result, <true>
+ret  arg1
+jmp <end>
+<true>
+ret  arg0
+jmp <end>
 ;
-; in python it would be If(name, condition)
+; in python it would be If(name, condition, true_block, false_block)
 ; a function will check through this and convert it into offsets
 ; (also happens at top level)
 
