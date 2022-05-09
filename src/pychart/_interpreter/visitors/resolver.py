@@ -4,6 +4,7 @@ from pkg_resources import ResolutionError
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
+    Call,
     Expr,
     ExprVisitor,
     Grouping,
@@ -13,6 +14,8 @@ from src.pychart._interpreter.ast_nodes.expression import (
 )
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
+    Function,
+    If,
     Let,
     Print,
     Stmt,
@@ -31,8 +34,11 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.locals = {}
 
     @staticmethod
-    def variable_bindings(stmts: List[Stmt]):
+    def variable_bindings(stmts: List[Stmt], native: List[str]):
         resolver = Resolver()
+        for name in native:
+            resolver.scopes[0][name] = True
+
         resolver.resolve(stmts)
 
         return resolver.locals
@@ -46,7 +52,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         else:  # Else because python typing is shit
             return thing(self)
 
-    def resolve_local(self, expr: Expr, name: Token):
+    def resolve_local(self, expr: Union[Variable, Assignment], name: Token):
         i = len(self.scopes) - 1
         while i >= 0:
             if self.scopes[i].get(name.lexeme) is not None:
@@ -98,6 +104,14 @@ class Resolver(ExprVisitor, StmtVisitor):
     def literal(self, expr: Literal) -> Any:
         return None
 
+    def call(self, expr: Call) -> Any:
+        self.resolve(expr.callee)
+
+        for arg in expr.arguments:
+            self.resolve(arg)
+
+        return None
+
     # StmtVisitor
     def expression(self, stmt: Expression):
         self.resolve(stmt.expr)
@@ -117,4 +131,22 @@ class Resolver(ExprVisitor, StmtVisitor):
         if stmt.initializer:
             self.resolve(stmt.initializer)
         self.define(stmt.name.lexeme)
+        return None
+
+    def function(self, stmt: Function) -> Any:
+        self.declare(stmt.name.lexeme)
+        self.define(stmt.name.lexeme)
+
+        self.open_scope()
+        for param in stmt.params:
+            self.declare(param.lexeme)
+            self.define(param.lexeme)
+        self.resolve(stmt.body)
+        self.close_scope()
+
+    def if_stmt(self, stmt: If) -> Any:
+        self.resolve(stmt.if_test)
+        self.resolve(stmt.if_body)
+        if stmt.else_body:
+            self.resolve(stmt.else_body)
         return None

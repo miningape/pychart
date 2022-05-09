@@ -49,3 +49,9 @@ class Environment:
             raise RuntimeError(f"Variable {key} is already defined")
 
         self.values[key] = value
+
+    @staticmethod
+    def print(env: "Environment", layer: int = 0):
+        print(layer, env.values)
+        if env.enclosing:
+            Environment.print(env.enclosing, layer + 1)

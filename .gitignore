@@ -4,6 +4,10 @@
 __pychache__/
 .pytest_cache/
 
+node_modules/
+yarn.lock
+generator.js
+
 dist/
 build/
 *.egg-info/
