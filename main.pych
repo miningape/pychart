@@ -1,11 +1,31 @@
-print("Hello World!");
-
-let x = 10;
-x = 20;
+let a = "Name fuckdace";
 
 {
-  let y = x;
-  print(y+1);
+  func doA() {
+    print(a);
+  }
+
+  
+
+  doA();
+  let a = 5;
+  a = 20;
+  doA();
 }
 
-print(x);
+let y = 10;
+y = 20;
+
+if (y = false) {
+  print("one");
+} elif (true) {
+  print("Yay");
+} elif (false) {
+  print("Nay");
+} else {
+  print("OOF");
+}
+
+print(y); // Error!!
+
+//print(x = 10);

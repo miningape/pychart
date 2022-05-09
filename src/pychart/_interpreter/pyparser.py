@@ -1,15 +1,18 @@
 from typing import List, Optional
+from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
     Expression,
+    Function,
+    If,
     Print,
     Stmt,
     Let,
 )
-from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
     Binary,
+    Call,
     Unary,
     Grouping,
     Expr,
@@ -31,8 +34,8 @@ class Parser:
         try:
             while not self.is_at_end():
                 statements.append(self.declaration())
-        except RuntimeError:
-            print("Error occurred")
+        except RuntimeError as err:
+            print("Error occurred", err)
             return None
 
         return statements
@@ -55,8 +58,12 @@ class Parser:
         return Let(name, initializer)
 
     def statement(self) -> Stmt:
-        if self.match(TokenType.PRINT):
-            return self.print_statement()
+        # if self.match(TokenType.PRINT):
+        # return self.print_statement()
+        if self.match(TokenType.FUNCTION):
+            return self.function()
+        if self.match(TokenType.IF):
+            return self.if_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
 
@@ -67,6 +74,28 @@ class Parser:
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Expression(expr)
 
+    def if_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after IF keyword')
+        if_test = self.expression()
+        self.consume(
+            TokenType.RIGHT_PEREN, 'Expected ")" after expression in IF statement'
+        )
+
+        if_body = self.statement()
+        else_body = None
+
+        matched_elif = False
+        if self.match(TokenType.ELIF):
+            matched_elif = True
+            else_body = self.if_statement()
+
+        if self.match(TokenType.ELSE):
+            if matched_elif:
+                raise RuntimeError("Only 1 ELSE can be after an IF")
+            else_body = self.statement()
+
+        return If(if_test, if_body, else_body)
+
     def print_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')
         expr = self.expression()
@@ -75,6 +104,36 @@ class Parser:
         )
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Print(expr)
+
+    def function(self) -> Stmt:
+        name = self.consume(
+            TokenType.IDENTIFIER, "Expected Identifier after FUNC keyword"
+        )
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after FUNC Identifier')
+
+        params: List[Token] = []
+        if not self.check(TokenType.RIGHT_PEREN):
+            params.append(
+                self.consume(TokenType.IDENTIFIER, "Expected identifier in arg list")
+            )
+
+            while self.match(TokenType.COMMA):
+                if len(params) > 127:
+                    self.error(self.peek(), "Too many arguments for function, max 127")
+
+                params.append(
+                    self.consume(
+                        TokenType.IDENTIFIER, "Expected identifier in arg list"
+                    )
+                )
+
+        self.consume(TokenType.RIGHT_PEREN, 'Expected ")" after argument list')
+        self.consume(
+            TokenType.LEFT_BRACE, 'Expected "{" after arg list in FUNC declaration'
+        )
+        body = self.block()
+
+        return Function(name, params, body)
 
     def block(self) -> List[Stmt]:
         statements: List[Stmt] = []
@@ -136,9 +195,8 @@ class Parser:
             equals = self.previous()
             value = self.assignment()
 
-            if type(expr).__name__ == Variable.__name__:
-                var = Variable.from_expr(expr)
-                return Assignment(var.name, value)
+            if isinstance(expr, Variable):
+                return Assignment(expr.name, value)
 
             self.error(equals, "Could not assign target")
 
@@ -200,7 +258,33 @@ class Parser:
 
             return Unary(operator, right)
 
-        return self.primary()
+        return self.call()
+
+    def call(self) -> Expr:
+        expr = self.primary()
+
+        while True:
+            if self.match(TokenType.LEFT_PEREN):
+                expr = self.finish_call(expr)
+            else:
+                break
+
+        return expr
+
+    def finish_call(self, callee: Expr) -> Expr:
+        args: List[Expr] = []
+
+        if not self.check(TokenType.RIGHT_PEREN):
+            args.append(self.expression())
+
+            while self.match(TokenType.COMMA):
+                if len(args) > 127:
+                    self.error(self.peek(), "Too many arguments in function, max 127")
+                args.append(self.expression())
+
+        self.consume(TokenType.RIGHT_PEREN, 'Expected ")" after function arguments.')
+
+        return Call(callee, args)
 
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):

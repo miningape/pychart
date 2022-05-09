@@ -1,16 +1,17 @@
-from typing import Any
-from src.pychart._interpreter.token_type import TokenType, Token
+from typing import Any, List
+
+from src.pychart._interpreter.token_type import Token
 
 
 class Expr:
     def __call__(self, visitor: "ExprVisitor") -> Any:
-        raise RuntimeError("Empty Expresson")
+        raise RuntimeError("Expected Expr")
 
 
 class ExprVisitor:
     @staticmethod
     def throw():
-        raise Exception("Unimplemented expr visitor")
+        raise Exception("Unimplemented Expr Visitor")
 
     # pylint: disable=unused-argument
     def binary(self, expr: "Binary") -> Any:
@@ -31,6 +32,9 @@ class ExprVisitor:
     def assignment(self, expr: "Assignment") -> Any:
         ExprVisitor.throw()
 
+    def call(self, expr: "Call") -> Any:
+        ExprVisitor.throw()
+
     # pylint: enable=unused-argument
 
 
@@ -44,10 +48,7 @@ class Binary(Expr):
         self.operator = operator
         self.right = right
 
-    def __str__(self) -> str:
-        return f"( {self.operator} {str(self.left)}, {str(self.right)} )"
-
-    def __call__(self, visitor: "ExprVisitor") -> Any:
+    def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.binary(self)
 
 
@@ -59,10 +60,7 @@ class Unary(Expr):
         self.operator = operator
         self.right = right
 
-    def __str__(self) -> str:
-        return f"( {self.operator} {str(self.right)} )"
-
-    def __call__(self, visitor: "ExprVisitor") -> Any:
+    def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.unary(self)
 
 
@@ -72,9 +70,6 @@ class Literal(Expr):
     def __init__(self, value: Any):
         self.value = value
 
-    def __str__(self) -> str:
-        return str(self.value)
-
     def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.literal(self)
 
@@ -82,11 +77,8 @@ class Literal(Expr):
 class Grouping(Expr):
     expr: Expr
 
-    def __init__(self, expr_: Expr):
-        self.expr = expr_
-
-    def __str__(self) -> str:
-        return f"( {str(self.expr)} )"
+    def __init__(self, expr: Expr):
+        self.expr = expr
 
     def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.grouping(self)
@@ -98,16 +90,7 @@ class Variable(Expr):
     def __init__(self, name: Token):
         self.name = name
 
-    @staticmethod
-    def from_expr(expr: Any):
-        name = expr.name
-
-        if name is None:
-            raise RuntimeError("Cannot convert expression to variable expression")
-
-        return Variable(name)
-
-    def __call__(self, visitor: ExprVisitor):
+    def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.variable(self)
 
 
@@ -119,18 +102,17 @@ class Assignment(Expr):
         self.name = name
         self.initializer = initializer
 
-    def __call__(self, visitor: ExprVisitor):
+    def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.assignment(self)
 
 
-if __name__ == "__main__":
-    # -123 * (45.67)
-    expre = Binary(
-        Unary(Token(TokenType.MINUS, "-", None, 1), Literal(123)),
-        Token(TokenType.STAR, "*", None, 1),
-        Grouping(Literal(45.67)),
-    )
+class Call(Expr):
+    callee: Expr
+    arguments: List[Expr]
 
-    print("Running expression for: -123 * (45.67)")
-    print("Tree: \t", expre)
-    print("Result:\t")
+    def __init__(self, callee: Expr, arguments: List[Expr]):
+        self.callee = callee
+        self.arguments = arguments
+
+    def __call__(self, visitor: ExprVisitor) -> Any:
+        return visitor.call(self)

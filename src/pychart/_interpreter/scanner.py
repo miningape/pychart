@@ -24,6 +24,7 @@ class Scanner:
     keywords: Dict[str, TokenType] = {
         "if": TokenType.IF,
         "else": TokenType.ELSE,
+        "elif": TokenType.ELIF,
         "func": TokenType.FUNCTION,
         "return": TokenType.RETURN,
         "while": TokenType.WHILE,
@@ -31,7 +32,7 @@ class Scanner:
         "let": TokenType.LET,
         "false": TokenType.FALSE,
         "true": TokenType.TRUE,
-        "print": TokenType.PRINT,
+        # "print": TokenType.PRINT,
     }
 
     def __init__(self, program_text: str):

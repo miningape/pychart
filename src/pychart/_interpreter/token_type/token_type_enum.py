@@ -42,10 +42,11 @@ class TokenType(Enum):
     NULL = auto()
     IF = auto()
     ELSE = auto()
+    ELIF = auto()
     WHILE = auto()
     FUNCTION = auto()
     RETURN = auto()
-    PRINT = auto()
+    # PRINT = auto()
     LET = auto()
 
     # End Of File
