@@ -41,6 +41,9 @@ def run(source: str):
 
 
 def run_prompt():
+    """
+    REPL entrypoint, exit with ".exit"
+    """
     try:
         while True:
             line = input("$ : ")
