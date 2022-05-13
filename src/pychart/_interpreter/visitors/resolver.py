@@ -14,6 +14,7 @@ from src.pychart._interpreter.ast_nodes.expression import (
 )
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
+    Break,
     Function,
     If,
     Let,
@@ -21,6 +22,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Stmt,
     StmtVisitor,
     Expression,
+    While
 )
 from src.pychart._interpreter.token_type.token import Token
 
@@ -150,4 +152,12 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve(stmt.if_body)
         if stmt.else_body:
             self.resolve(stmt.else_body)
+        return None
+
+    def while_stmt(self, stmt: While) -> Any:
+        self.resolve(stmt.while_test)
+        self.resolve(stmt.while_body)
+        return None
+
+    def break_stmt(self, stmt: Break) -> Any:
         return None

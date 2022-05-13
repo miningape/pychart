@@ -12,18 +12,23 @@ from src.pychart._interpreter.ast_nodes.expression import (
 )
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
+    Break,
     Expression,
     Function,
     If,
     Let,
     Return,
     StmtVisitor,
+    While
 )
 from src.pychart._interpreter.helpers.callable import PychartCallable
 from src.pychart._interpreter.helpers.environment import Environment
 from src.pychart._interpreter.helpers.number_helpers import is_number, try_cast_int
 from src.pychart._interpreter.token_type.token import Token
 from src.pychart._interpreter.token_type.token_type_enum import TokenType
+
+class BreakStatementException(Exception):
+    pass
 
 
 class ReturnValue(Exception):
@@ -174,6 +179,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
             stmt.if_body(self)
         elif stmt.else_body:
             stmt.else_body(self)
+
+    def while_stmt(self, stmt: While) -> Any:
+        while stmt.while_test(self):
+            try:
+                stmt.while_body(self)
+            except BreakStatementException:
+                break
+        return None
+
+    def break_stmt(self, stmt: Break) -> Any:
+        raise BreakStatementException("Cannot invoke 'break;' outside of a while loop")
 
 
 class PychartFunction(PychartCallable):

@@ -2,12 +2,14 @@ from typing import List, Optional
 from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
+    Break,
     Expression,
     Function,
     If,
     Return,
     Stmt,
     Let,
+    While
 )
 from src.pychart._interpreter.ast_nodes.expression import (
     Assignment,
@@ -64,6 +66,10 @@ class Parser:
             return self.if_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
+        if self.match(TokenType.WHILE):
+            return self.while_statement()
+        if self.match(TokenType.BREAK):
+            return self.break_statement()
 
         if self.match(TokenType.RETURN):
             expr = self.expression()
@@ -79,6 +85,20 @@ class Parser:
         expr = self.expression()
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Expression(expr)
+
+    def break_statement(self) -> Stmt:
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
+        return Break()
+
+    def while_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after WHILE keyword')
+        while_test = self.expression()
+        self.consume( TokenType.RIGHT_PEREN, 'Expected ")" after expression in WHILE statement' )
+
+        while_body = self.statement()
+
+        return While(while_test, while_body)
+
 
     def if_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after IF keyword')
