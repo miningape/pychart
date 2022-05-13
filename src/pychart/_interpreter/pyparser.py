@@ -5,7 +5,6 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Expression,
     Function,
     If,
-    Print,
     Stmt,
     Let,
 )
@@ -96,14 +95,14 @@ class Parser:
 
         return If(if_test, if_body, else_body)
 
-    def print_statement(self) -> Stmt:
-        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')
-        expr = self.expression()
-        self.consume(
-            TokenType.RIGHT_PEREN, 'Expected ")" after expression in print call'
-        )
-        self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
-        return Print(expr)
+    # def print_statement(self) -> Stmt:
+    #     self.consume(TokenType.LEFT_PEREN, 'Expected "(" after PRINT keyword')
+    #     expr = self.expression()
+    #     self.consume(
+    #         TokenType.RIGHT_PEREN, 'Expected ")" after expression in print call'
+    #     )
+    #     self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
+    #     return Print(expr)
 
     def function(self) -> Stmt:
         name = self.consume(

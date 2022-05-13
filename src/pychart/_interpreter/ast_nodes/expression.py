@@ -8,6 +8,20 @@ class Expr:
         raise RuntimeError("Expected Expr")
 
 
+class Binary(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+    def __init__(self, left: Expr, operator: Token, right: Expr):
+        self.left = left
+        self.operator = operator
+        self.right = right
+
+    def __call__(self, visitor: "ExprVisitor") -> Any:
+        return visitor.binary(self)
+
+
 class ExprVisitor:
     @staticmethod
     def throw():
@@ -36,20 +50,6 @@ class ExprVisitor:
         ExprVisitor.throw()
 
     # pylint: enable=unused-argument
-
-
-class Binary(Expr):
-    left: Expr
-    operator: Token
-    right: Expr
-
-    def __init__(self, left: Expr, operator: Token, right: Expr):
-        self.left = left
-        self.operator = operator
-        self.right = right
-
-    def __call__(self, visitor: ExprVisitor) -> Any:
-        return visitor.binary(self)
 
 
 class Unary(Expr):

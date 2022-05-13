@@ -1,31 +1,5 @@
-let a = "Name fuckdace";
-
-{
-  func doA() {
-    print(a);
-  }
-
-  
-
-  doA();
-  let a = 5;
-  a = 20;
-  doA();
-}
-
-let y = 10;
-y = 20;
-
-if (y = false) {
-  print("one");
-} elif (true) {
-  print("Yay");
-} elif (false) {
-  print("Nay");
+if (10 > 11) {
+  10;
 } else {
-  print("OOF");
+  20;
 }
-
-print(y); // Error!!
-
-//print(x = 10);

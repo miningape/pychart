@@ -16,12 +16,14 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Function,
     If,
     Let,
-    Print,
     StmtVisitor,
 )
 from src.pychart._interpreter.helpers.callable import PychartCallable
 from src.pychart._interpreter.helpers.environment import Environment
-from src.pychart._interpreter.helpers.number_helpers import is_number, try_cast_int
+from src.pychart._interpreter.helpers.number_helpers import (
+    interpret_instruction,
+    try_cast_int,
+)
 from src.pychart._interpreter.token_type.token import Token
 from src.pychart._interpreter.token_type.token_type_enum import TokenType
 
@@ -55,31 +57,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         left = expr.left(self)
         right = expr.right(self)
 
-        if expr.operator.token_type == TokenType.STAR:
-            return left * right
-        elif expr.operator.token_type == TokenType.SLASH:
-            return left / right
-        elif expr.operator.token_type == TokenType.PLUS:
-            state = is_number(left) == is_number(right)
-            return left + right if state else str(left) + str(right)
-        elif expr.operator.token_type == TokenType.MINUS:
-            return left - right
-        elif expr.operator.token_type == TokenType.GREATER_EQUAL:
-            return left >= right
-        elif expr.operator.token_type == TokenType.GREATER:
-            return left > right
-        elif expr.operator.token_type == TokenType.LESSER_EQUAL:
-            return left <= right
-        elif expr.operator.token_type == TokenType.LESSER:
-            return left < right
-        elif expr.operator.token_type == TokenType.EQUAL_EQUAL:
-            return left == right
-        elif expr.operator.token_type == TokenType.EQUAL:
-            raise RuntimeError("Not implemented.")
-        elif expr.operator.token_type == TokenType.BANG_EQUAL:
-            return left != right
-
-        raise RuntimeError("Call Binary Operator Undefined")
+        return interpret_instruction(expr.operator, left, right)
 
     def unary(self, expr: Unary) -> Any:
         right = expr.right(self)
@@ -131,10 +109,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def expression(self, stmt: Expression) -> Any:
         return stmt.expr(self)
 
-    def print(self, stmt: Print) -> Any:
-        value = stmt.expr(self)
-        print(value)
-        return None
+    # def print(self, stmt: Print) -> Any:
+    #     value = stmt.expr(self)
+    #     print(value)
+    #     return None
 
     def let(self, stmt: Let) -> Any:
         value = None

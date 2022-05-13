@@ -59,9 +59,6 @@ const variables: variableType = {
       Expression: {
         expr: "Expr",
       },
-      Print: {
-        expr: "Expr",
-      },
       Let: {
         name: "Token",
         initializer: "Optional[Expr]",
@@ -69,15 +66,15 @@ const variables: variableType = {
       Block: {
         statements: "List[Stmt]",
       },
-      Function: {
-        name: "Token",
-        params: "List[Token]",
-        body: "List[Stmt]",
-      },
       If: {
         if_test: "Expr",
         if_body: "Stmt",
         else_body: "Optional[Stmt]",
+      },
+      Function: {
+        name: "Token",
+        params: "List[Token]",
+        body: "List[Stmt]",
       },
     },
   },
