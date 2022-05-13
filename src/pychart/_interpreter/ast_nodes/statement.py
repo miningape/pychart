@@ -127,5 +127,6 @@ class While(Stmt):
 class Break(Stmt):
     def __init__(self):
         pass
+
     def __call__(self, visitor: StmtVisitor) -> Any:
         return visitor.break_stmt(self)
