@@ -1,31 +1,9 @@
-let a = "Name fuckdace";
+let kyle = 3;
+let deeznut = 0;
 
-{
-  func doA() {
-    print(a);
-  }
-
-  
-
-  doA();
-  let a = 5;
-  a = 20;
-  doA();
+while(deeznut < kyle) {
+  print("play ! :) explore :o ! create <3 !");
+  deeznut = deeznut + 1;
+  break;
 }
 
-let y = 10;
-y = 20;
-
-if (y = false) {
-  print("one");
-} elif (true) {
-  print("Yay");
-} elif (false) {
-  print("Nay");
-} else {
-  print("OOF");
-}
-
-print(y); // Error!!
-
-//print(x = 10);

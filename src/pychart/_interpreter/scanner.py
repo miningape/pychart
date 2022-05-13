@@ -32,6 +32,7 @@ class Scanner:
         "let": TokenType.LET,
         "false": TokenType.FALSE,
         "true": TokenType.TRUE,
+        "break": TokenType.BREAK
         # "print": TokenType.PRINT,
     }
 
