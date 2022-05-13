@@ -17,7 +17,6 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Function,
     If,
     Let,
-    Print,
     Stmt,
     StmtVisitor,
     Expression,
@@ -116,9 +115,6 @@ class Resolver(ExprVisitor, StmtVisitor):
     def expression(self, stmt: Expression):
         self.resolve(stmt.expr)
         return None
-
-    def print(self, stmt: Print):
-        self.resolve(stmt.expr)
 
     def block(self, stmt: Block):
         self.open_scope()

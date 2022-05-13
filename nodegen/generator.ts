@@ -59,9 +59,6 @@ const variables: variableType = {
       Expression: {
         expr: "Expr",
       },
-      Print: {
-        expr: "Expr",
-      },
       Let: {
         name: "Token",
         initializer: "Optional[Expr]",

@@ -16,7 +16,6 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Function,
     If,
     Let,
-    Print,
     StmtVisitor,
 )
 from src.pychart._interpreter.helpers.callable import PychartCallable
@@ -130,11 +129,6 @@ class Interpreter(ExprVisitor, StmtVisitor):
     # Statement Visitor
     def expression(self, stmt: Expression) -> Any:
         return stmt.expr(self)
-
-    def print(self, stmt: Print) -> Any:
-        value = stmt.expr(self)
-        print(value)
-        return None
 
     def let(self, stmt: Let) -> Any:
         value = None
