@@ -1,24 +1,39 @@
-from typing import Any
+from typing import Any, Dict
+from src.pychart._interpreter.helpers.callable import (
+    InputFunc,
+    PrintFunc,
+    PychartCallable,
+)
+from src.pychart._interpreter.visitors.interpreter import Interpreter
+from src.pychart._interpreter.visitors.resolver import Resolver
+from src.pychart._interpreter.scanner import Scanner
+from src.pychart._interpreter.pyparser import Parser
 
-from src.pychart._interpreter.environment import Environment
-from ._interpreter.scanner import Scanner
-from ._interpreter.pyparser import Parser
+native_functions: Dict[str, PychartCallable] = {
+    "input": InputFunc(),
+    "print": PrintFunc(),
+}
 
 
 def run(source: str):
-    scanner = Scanner(source)
-    tokens = scanner.get_tokens()
+    tokens = Scanner(source).get_tokens()
     statements = Parser(tokens).parse()
-    last_value: Any = None
 
     if statements is None:
         return None
 
+    bindings = Resolver.variable_bindings(statements, list(native_functions.keys()))
+    interpreter = Interpreter(bindings)
+
+    for (name, callablefn) in native_functions.items():
+        interpreter.environment.reverve(name, callablefn)
+
+    last_value: Any = None
+
     try:
-        environment = Environment()
         for statement in statements:
-            last_value = statement(environment)
-    except BaseException as err:
+            last_value = statement(interpreter)
+    except Exception as err:
         print(f"Error: {err}")
         print("Exiting...")
 

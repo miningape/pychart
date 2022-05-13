@@ -46,7 +46,7 @@ class TokenType(Enum):
     WHILE = auto()
     FUNCTION = auto()
     RETURN = auto()
-    PRINT = auto()
+    # PRINT = auto()
     LET = auto()
     BREAK = auto()
 

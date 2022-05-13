@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@types/node": "^17.0.25",
+    "g": "^2.0.1",
+    "tsc": "^2.0.4",
+    "typescript": "^4.6.4"
+  },
+  "scripts": {
+    "nodegen": "tsc && node generator.js"
+  }
+}

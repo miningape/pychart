@@ -32,8 +32,8 @@ class Scanner:
         "let": TokenType.LET,
         "false": TokenType.FALSE,
         "true": TokenType.TRUE,
-        "print": TokenType.PRINT,
         "break": TokenType.BREAK
+        # "print": TokenType.PRINT,
     }
 
     def __init__(self, program_text: str):
