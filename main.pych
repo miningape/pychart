@@ -1,5 +1,19 @@
 let a = "Name fuckdace";
 
+func makeCounter() {
+    let counter = 0;
+    func count() {
+      return counter = counter + 1;
+    }
+    
+    return count;
+}
+
+let counter = makeCounter();
+print(counter());  // 1
+print(counter());  // 2
+print(counter());  // 3
+
 {
   func isGreater(a, b) {
     if (a > b) return "Yes";
@@ -23,7 +37,7 @@ let a = "Name fuckdace";
     fn(n);
   }
 
-  repeat(200, printFib);
+  repeat(0, printFib);
 }
 
 let y = 10;
