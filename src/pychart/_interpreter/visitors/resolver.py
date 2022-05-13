@@ -17,6 +17,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Function,
     If,
     Let,
+    Return,
     Stmt,
     StmtVisitor,
     Expression,
@@ -127,6 +128,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         if stmt.initializer:
             self.resolve(stmt.initializer)
         self.define(stmt.name.lexeme)
+        return None
+
+    def return_stmt(self, stmt: Return) -> Any:
+        self.resolve(stmt.expr)
         return None
 
     def function(self, stmt: Function) -> Any:

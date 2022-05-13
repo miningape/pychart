@@ -5,6 +5,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Expression,
     Function,
     If,
+    Return,
     Stmt,
     Let,
 )
@@ -63,6 +64,14 @@ class Parser:
             return self.if_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
+
+        if self.match(TokenType.RETURN):
+            expr = self.expression()
+            self.consume(
+                TokenType.SEMICOLON, "Expected ';' following return expression"
+            )
+
+            return Return(expr)
 
         return self.expression_statement()
 

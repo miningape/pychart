@@ -59,6 +59,9 @@ const variables: variableType = {
       Expression: {
         expr: "Expr",
       },
+      Return: {
+        expr: "Expr",
+      },
       Let: {
         name: "Token",
         initializer: "Optional[Expr]",
@@ -94,7 +97,7 @@ class ${className}:
 function makeVisitorMethod(baseClassName: string, className: string) {
   let name = className.toLowerCase();
   return `    def ${
-    name === "if" ? "if_stmt" : name
+    name === "if" ? "if_stmt" : name === "return" ? "return_stmt" : name
   }(self, ${baseClassName.toLowerCase()}: "${className}") -> Any:
         ${baseClassName}Visitor.throw()`;
 }
@@ -132,7 +135,9 @@ ${args.map(([field, type]) => `    ${field}: ${type}`).join("\n")}
 ${args.map(([field]) => `        self.${field} = ${field}`).join("\n")}
 
     def __call__(self, visitor: ${baseClassName}Visitor) -> Any:
-        return visitor.${name === "if" ? "if_stmt" : name}(self)
+        return visitor.${
+          name === "if" ? "if_stmt" : name === "return" ? "return_stmt" : name
+        }(self)
 
 `;
 }

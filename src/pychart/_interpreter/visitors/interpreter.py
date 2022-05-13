@@ -16,6 +16,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Function,
     If,
     Let,
+    Return,
     StmtVisitor,
 )
 from src.pychart._interpreter.helpers.callable import PychartCallable
@@ -23,6 +24,14 @@ from src.pychart._interpreter.helpers.environment import Environment
 from src.pychart._interpreter.helpers.number_helpers import is_number, try_cast_int
 from src.pychart._interpreter.token_type.token import Token
 from src.pychart._interpreter.token_type.token_type_enum import TokenType
+
+
+class ReturnValue(Exception):
+    value: Any
+
+    def __init__(self, value: Any) -> None:
+        super().__init__("Cannot `return` outside of a function")
+        self.value = value
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -130,6 +139,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def expression(self, stmt: Expression) -> Any:
         return stmt.expr(self)
 
+    def return_stmt(self, stmt: Return) -> Any:
+        value = stmt.expr(self)
+        raise ReturnValue(value)
+
     def let(self, stmt: Let) -> Any:
         value = None
         if stmt.initializer is not None:
@@ -191,12 +204,16 @@ class PychartFunction(PychartCallable):
             )
         # pylint: enable=consider-using-enumerate
 
-        last = None
-        for statement in self.definition.body:
-            last = statement(self.interpreter)
+        value = None
+        try:
+            for statement in self.definition.body:
+                statement(self.interpreter)
+        except ReturnValue as ret:
+            value = ret.value
 
         self.interpreter.environment = previous
-        return last
+
+        return value
 
     def arity(self, args: List[Any]) -> Tuple[bool, str]:
         return (

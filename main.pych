@@ -1,16 +1,29 @@
 let a = "Name fuckdace";
 
 {
-  func doA() {
-    print(a);
+  func isGreater(a, b) {
+    if (a > b) return "Yes";
+    
+    return "No";
   }
 
-  
+  func fibonacci(n) {
+    if (n < 2) return n;
 
-  doA();
-  let a = 5;
-  a = 20;
-  doA();
+    return fibonacci(n - 1) + fibonacci(n - 2);
+  }
+
+  func printFib(n) {
+    print(n + " : " + fibonacci(n));
+  }
+
+  func repeat(n, fn) {
+    if (n < 0) return null;
+    repeat(n - 1, fn);
+    fn(n);
+  }
+
+  repeat(200, printFib);
 }
 
 let y = 10;
