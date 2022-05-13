@@ -2,6 +2,7 @@ from typing import List, Optional
 from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
+    Break,
     Expression,
     Function,
     If,
@@ -79,9 +80,9 @@ class Parser:
         self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
         return Expression(expr)
 
-    # def break_statement(self) -> Stmt:
-    #     self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
-    #     return Break()
+    def break_statement(self) -> Stmt:
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
+        return Break()
 
     def while_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after WHILE keyword')

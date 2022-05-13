@@ -82,6 +82,8 @@ const variables: variableType = {
       While: {
         while_test: "Expr",
         while_body: "Stmt"
+      },
+      Break: {
       }
     },
   },

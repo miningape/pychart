@@ -36,6 +36,9 @@ class StmtVisitor:
     def while_stmt(self, stmt: "While") -> Any:
         StmtVisitor.throw()
 
+    def break_stmt(self, stmt: "Break") -> Any:
+        StmtVisitor.throw()
+
     # pylint: enable=unused-argument
 
 
@@ -119,3 +122,10 @@ class While(Stmt):
 
     def __call__(self, visitor: StmtVisitor) -> Any:
         return visitor.while_stmt(self)
+
+
+class Break(Stmt):
+    def __init__(self):
+        pass
+    def __call__(self, visitor: StmtVisitor) -> Any:
+        return visitor.break_stmt(self)
