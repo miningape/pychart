@@ -1,9 +1,21 @@
-let kyle = 3;
-let deeznut = 0;
+let stuff = [1, 2, 3];
 
-while(deeznut < kyle) {
-  print("play ! :) explore :o ! create <3 !");
-  deeznut = deeznut + 1;
-  break;
+func $map(array, fn) {
+  let pos = 0;
+  let rtn = [];
+
+  while (pos < $len(array)) {
+    $push( rtn, fn(array[pos]) );
+    pos = pos + 1;
+  }
+
+  rtn;
 }
+
+func square(num) { num * num; }
+
+print($map(stuff, square));
+
+
+
 

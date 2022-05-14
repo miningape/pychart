@@ -4,6 +4,7 @@ from src.pychart._interpreter.helpers.callable import (
     PrintFunc,
     PychartCallable,
 )
+from src.pychart._interpreter.native_callable.arrays import ArrayMethods
 from src.pychart._interpreter.visitors.interpreter import Interpreter
 from src.pychart._interpreter.visitors.resolver import Resolver
 from src.pychart._interpreter.scanner import Scanner
@@ -12,6 +13,9 @@ from src.pychart._interpreter.pyparser import Parser
 native_functions: Dict[str, PychartCallable] = {
     "input": InputFunc(),
     "print": PrintFunc(),
+    "$push": ArrayMethods.Push(),
+    "$pop": ArrayMethods.Pop(),
+    "$len": ArrayMethods.Length(),
 }
 
 

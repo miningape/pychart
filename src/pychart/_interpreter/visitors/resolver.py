@@ -2,12 +2,14 @@ from typing import Any, Dict, List, Union
 
 from pkg_resources import ResolutionError
 from src.pychart._interpreter.ast_nodes.expression import (
+    Array,
     Assignment,
     Binary,
     Call,
     Expr,
     ExprVisitor,
     Grouping,
+    Index,
     Literal,
     Unary,
     Variable,
@@ -22,7 +24,7 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Stmt,
     StmtVisitor,
     Expression,
-    While
+    While,
 )
 from src.pychart._interpreter.token_type.token import Token
 
@@ -112,6 +114,16 @@ class Resolver(ExprVisitor, StmtVisitor):
         for arg in expr.arguments:
             self.resolve(arg)
 
+        return None
+
+    def array(self, expr: Array) -> Any:
+        for elem in expr.elems:
+            self.resolve(elem)
+        return None
+
+    def index(self, expr: Index) -> Any:
+        self.resolve(expr.index)
+        self.resolve(expr.indexee)
         return None
 
     # StmtVisitor
