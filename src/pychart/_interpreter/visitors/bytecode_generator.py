@@ -21,12 +21,14 @@ class BytecodeGeneratorState:
     variables : Dict[str, Any] = {}
     bytecode  : List[bt.Bytecode] = []
     statements: List[Stmt]     = None
+    loop_id   : str
 
     def __init__(self, variables: Dict[str, Any],
-            bytecode: List[bt.Bytecode], statements: List[Stmt]):
+            bytecode: List[bt.Bytecode], statements: List[Stmt], loop_id: str):
         self.variables  = variables
         self.bytecode   = bytecode
         self.statements = statements
+        self.loop_id    = loop_id
 
 class BytecodeGeneratorIdentifier:
     is_function: bool = False
@@ -53,6 +55,7 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
     variables  : dict[str, BytecodeGeneratorIdentifier] = {}
     bytecode   : list[bt.Bytecode] = []
     statements : list[Stmt]     = None
+    loop_id    : str = None
 
     # this is used for generated names
     generated_id : int          = 0
@@ -63,7 +66,8 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
             self.variables[name] = BytecodeGeneratorIdentifier(name, True)
 
     def push_state(self, statements: list[Stmt]):
-        state_obj = BytecodeGeneratorState(self.variables, self.bytecode, self.statements)
+        state_obj = BytecodeGeneratorState(self.variables,
+                self.bytecode, self.statements, self.loop_id)
 
         self.state_stack.append(state_obj)
         self.variables  = {}
@@ -73,11 +77,13 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
     def pop_state(self):
         if len(self.state_stack) == 0:
             return None
-        current_state = BytecodeGeneratorState(self.variables, self.bytecode, self.statements)
+        current_state = BytecodeGeneratorState(self.variables,
+                self.bytecode, self.statements, self.loop_id)
         old_state = self.state_stack.pop()
         self.variables  = old_state.variables
         self.bytecode   = old_state.bytecode
         self.statements = old_state.statements
+        self.loop_id    = old_state.loop_id
         return current_state
 
     def next_id(self) -> int:
@@ -116,10 +122,23 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
     def push(self, bytecode: bt.Bytecode):
         self.bytecode.append(bytecode)
 
-    def generate(self):
-        return self.internal_generate(True)
+    def gen_bytecode_expression(self, code: BytecodeExpression):
+        ([create_temp, set_value], temporary) = self.gen_internal_bytecode_expression(code)
+        self.push(create_temp)
+        self.push(set_value)
+        return temporary
 
-    def internal_generate(self, should_solve: bool):
+    def gen_internal_bytecode_expression(self, code: BytecodeExpression):
+        temporary_name = '.tmp' + str(self.next_id())
+        temporary   = bt.Identifier(temporary_name)
+        create_temp = bt.Create(temporary)
+        set_value   = code(temporary)
+        return ([create_temp, set_value], temporary)
+
+    def generate(self, keep_labels: bool = False):
+        return self.internal_generate(True, keep_labels)
+
+    def internal_generate(self, should_solve: bool, keep_labels: bool = False):
         try:
             for statement in self.statements:
                 statement(self)
@@ -128,9 +147,8 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
             print("Exiting...")
             return None
         if should_solve:
-            self.bytecode = bt.solve_block(self.bytecode)
+            self.bytecode = bt.solve_block(self.bytecode, keep_labels=keep_labels)
         return self.bytecode
-
 
     def expression(self, stmt: Expression) -> Any:
         expr = stmt.expr(self)
@@ -155,6 +173,9 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
             elif isinstance(value, Variable):
                 value_name = self.get_identifier(value.name.lexeme)
                 self.push(bt.Push(identifier, value_name))
+            elif isinstance(value, BytecodeExpression):
+                temporary = self.gen_bytecode_expression(value)
+                self.push(bt.Push(identifier, temporary))
             else:
                 raise RuntimeError("invalid initialiser")
 
@@ -162,10 +183,8 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
         #HACK: block creates a function with and immediately executes it
         #      this is because I'm dumb and forgot blocs existed
 
-        name = '.block' + str(self.next_id())
         self.push_state(stmt.statements)
-
-        bytecode = self.internal_generate(True)
+        bytecode = self.internal_generate(False)
         block = [bt.Frame()] + bytecode + [bt.Raze()]
 
         self.pop_state()
@@ -180,17 +199,41 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
         self.push_function(name)
 
         self.push_state(stmt.body)
-        for param in stmt.params:
-            self.variables[name] = BytecodeGeneratorIdentifier(param.lexeme, False)
+        for param in params:
+            self.variables[param.value] = BytecodeGeneratorIdentifier(param.value, False)
         bytecodes = self.internal_generate(False)
-        bytecodes = bt.solve_block(bytecodes)
         bytecodes.append(bt.Return(None))
+        # needed to get the actual number of instructions in the function
+        # but it is actually wrong at this point and would lead to erroneous jumps
+        bytecodes = remove_inner_lists(bytecodes)
         fun = bt.Function(self.get_identifier(name).name, params, len(bytecodes))
 
         self.pop_state()
         self.push(fun)
         for bytecode in bytecodes:
             self.push(bytecode)
+
+    def return_stmt(self, stmt: Return) -> Any:
+        expr = stmt.expr(self)
+
+        if isinstance(expr, Literal):
+            if expr.value is None:
+                self.push(bt.Return(None))
+            else:
+                self.push(bt.Return(bt.Value(expr.value)))
+            return
+
+        temporary = None
+        if isinstance(expr, Variable):
+            temporary = self.get_identifier(expr.name.lexeme).name
+        elif isinstance(expr, bt.Push):
+            #assignment expression
+            temporary = expr.identifier
+            self.push(expr)
+        elif isinstance(expr, BytecodeExpression):
+            temporary = self.gen_bytecode_expression(expr)
+
+        self.push(bt.Return(temporary))
 
     def if_stmt(self, stmt: If) -> Any:
         if_kind = bt.If
@@ -219,17 +262,18 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
             temporary = expr.identifier
             self.push(expr)
         elif isinstance(expr, BytecodeExpression):
-            temporary_name = '.tmp' + str(self.next_id())
-            temporary   = bt.Identifier(temporary_name)
-            create_temp = bt.Create(temporary)
-            set_value   = expr(temporary)
-            self.push(create_temp)
-            self.push(set_value)
+            temporary = self.gen_bytecode_expression(expr)
 
-        if_body: Block = stmt.if_body
-        self.push_state(if_body.statements)
-        true_block = self.internal_generate(False)
-        self.pop_state()
+        if_body = stmt.if_body
+        if if_body is not None:
+            if isinstance(if_body, Block):
+                self.push_state(if_body.statements)
+                true_block = self.internal_generate(False)
+                self.pop_state()
+            else:
+                self.push_state([stmt.if_body])
+                true_block = self.internal_generate(False)
+                self.pop_state()
 
         if stmt.else_body is not None:
             if isinstance(stmt.else_body, Block):
@@ -245,10 +289,55 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
         true_block  = remove_inner_lists(true_block)
         false_block = remove_inner_lists(false_block)
         self.push(if_kind(name, temporary, true_block, false_block))
-        # do if block
-        # do else block
 
-    # expressions
+
+    def while_stmt(self, stmt: While) -> Any:
+        expr = stmt.while_test
+
+        name       : str               = str(self.next_id()) + 'while'
+        temporary  : bt.Identifier     = None
+        block      : List[bt.Bytecode] = []
+
+
+        header = None
+        expr = expr(self)
+        if isinstance(expr, Variable):
+            temporary = self.get_identifier(expr.name).name
+        elif isinstance(expr, Literal):
+            temporary_name = '.tmp' + str(self.next_id())
+            temporary   = bt.Identifier(temporary_name)
+            create_temp = bt.Create(temporary)
+            set_value   = bt.Push(temporary, bt.Value(expr.value))
+            self.push(create_temp)
+            self.push(set_value)
+        elif isinstance(expr, bt.Push):
+            #assignment expression
+            temporary = expr.identifier
+            self.push(expr)
+        elif isinstance(expr, BytecodeExpression):
+            (header, temporary) = self.gen_internal_bytecode_expression(expr)
+
+        while_body = stmt.while_body
+        if isinstance(while_body, Block):
+            while_body = while_body.statements
+        else:
+            while_body = [while_body]
+
+        self.push_state(while_body)
+        self.loop_id = name
+        block = self.internal_generate(False)
+        self.pop_state()
+
+        block  = remove_inner_lists(block)
+        self.push(bt.Frame())
+        self.push(bt.While(name, header, temporary, block))
+        self.push(bt.Raze())
+
+    def break_stmt(self, stmt: Break) -> Any:
+        if self.loop_id is None:
+            raise RuntimeError('break outside of loop')
+        self.push(bt.Jump(bt.Label('.end_' + self.loop_id)))
+
     def binary(self, expr: Binary) -> Any:
         left = expr.left(self)
         right = expr.right(self)
@@ -352,7 +441,7 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
             unary_bytecode = bt.LogicalNot
 
         if unary_bytecode is None:
-            raise RuntimeError(f"unsuported unary operator '{expr.operator}'")
+            raise RuntimeError(f"unsupported unary operator '{expr.operator}'")
 
         temporary_name = '.tmp' + str(self.next_id())
         if isinstance(right, Variable):
@@ -380,12 +469,8 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
         name  = expr.name.lexeme
         value = expr.initializer(self)
         if isinstance(value, BytecodeExpression):
-            temporary_name = '.tmp' + str(self.next_id())
-            temporary = bt.Create(bt.Identifier(temporary_name))
-            set_value = value(bt.Identifier(temporary_name))
-            self.push(temporary)
-            self.push(set_value)
-            return bt.Push(self.get_identifier(name).name, bt.Identifier(temporary_name))
+            temporary = self.gen_bytecode_expression(value)
+            return bt.Push(self.get_identifier(name).name, temporary)
         #NOCHEKIN:
         return bt.Push(self.get_identifier(name).name, bt.Value(value.value))
 
@@ -394,8 +479,9 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
         if not isinstance(callee, Variable):
             raise RuntimeError("invalid call expression")
         function_name = callee.name.lexeme
-        if not self.get_identifier(function_name).is_function:
-            raise RuntimeError(f"variable {function_name} does not refer to a function")
+        #TODO: make functions have a return type so that we can cascade pseudo typing
+        # if not self.get_identifier(function_name).is_function:
+        #     raise RuntimeError(f"variable {function_name} does not refer to a function")
 
         args: list[Any] = []
         for arg in expr.arguments:
@@ -408,6 +494,9 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
                     raise RuntimeError(f"no variable named {name}")
             elif isinstance(val, Literal):
                 args.append(bt.Value(val.value))
+            elif isinstance(val, BytecodeExpression):
+                temporary = self.gen_bytecode_expression(val)
+                args.append(temporary)
             else:
                 raise RuntimeError("invalid call expression")
 

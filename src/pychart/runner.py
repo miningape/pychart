@@ -34,17 +34,19 @@ def run_bytecode(filename: str, should_print: bool):
         return None
 
     generator = BytecodeGenerator(statements, list(native_functions.keys()))
-    bytecodes = generator.generate()
+    bytecodes = generator.generate(keep_labels=should_print)
 
     if bytecodes is None:
         return None
 
     if should_print:
         BytecodePrinter().print(bytecodes)
+        print()
+        bytecodes = solve_block(bytecodes)
 
     interp = BytecodeInterpreter()
     for (name, callablefn) in native_functions.items():
-        interp.push(name, callablefn.bytecode_execute)
+        interp.push_native(name, callablefn.bytecode_execute)
     return interp.execute(bytecodes)
 
 

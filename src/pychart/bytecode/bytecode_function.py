@@ -4,13 +4,13 @@ from typing import List, Optional, Union
 # god i hate formatters
 from src.pychart.bytecode.bytecode import (Bytecode, Mnemonics, is_list_of,
                                            union_contains)
-from src.pychart.bytecode.bytecode_jumps import Jump, JumpIfTrue
+from src.pychart.bytecode.bytecode_jumps import Jump, JumpIfTrue, JumpIfNotTrue
 from src.pychart.bytecode.bytecode_util import (Frame, Identifier,
                                                 IdentifierOrValue, Label, Noop,
                                                 Value)
 
 
-def solve_block(bytecodes: list[Bytecode]):
+def solve_block(bytecodes: list[Bytecode], keep_labels: bool = False):
     block = []
     for item in bytecodes:
         if is_list_of(Bytecode, item):
@@ -20,14 +20,18 @@ def solve_block(bytecodes: list[Bytecode]):
         else:
             raise TypeError("expected a list of bytecode but got: " + str(type(item)))
 
+    if keep_labels:
+        return block
+
     labels = {}
     for (i, item) in enumerate(block):
         if isinstance(item, Label):
             labels[item.identifier] = i
 
     for (i, item) in enumerate(block):
-        if isinstance(item, (Jump, JumpIfTrue)):
-            item.location = labels[item.location.identifier]
+        if isinstance(item, (Jump, JumpIfTrue, JumpIfNotTrue)):
+            if not isinstance(item.location, int):
+                item.location = labels[item.location.identifier]
         elif isinstance(item, Label):
             block[i] = Noop()
     return block

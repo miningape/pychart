@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Dict, Any, Union, List, Optional
 from src.pychart.bytecode.bytecodes import *
 
 class BinaryEvaluator:
@@ -13,7 +13,13 @@ class BinaryEvaluator:
         result_symbol = interpreter.get_symbol_name_or_value(code.destination)
         left  = interpreter.get(code.left )
         right = interpreter.get(code.right)
-        interpreter.current_table[result_symbol] = self.evaluator(left, right)
+
+        if isinstance(left, str) and not isinstance(right, str):
+            right = str(right)
+        if isinstance(right, str) and not isinstance(left, str):
+            left = str(left)
+
+        interpreter.set(result_symbol, self.evaluator(left, right))
 
 class UnaryEvaluator:
     evaluator: Callable[[Any], Any]
@@ -28,18 +34,78 @@ class UnaryEvaluator:
         value  = interpreter.get(code.value)
         interpreter.current_table[result_symbol] = self.evaluator(value)
 
+class Scope:
+    symbol_table: Dict[str, Any]
+
+    def __init__(self, symbol_table: Optional[Dict[str, Any]]):
+        if symbol_table is not None:
+            self.symbol_table = symbol_table
+        else:
+            self.symbol_table = {}
+
+    def set(self, name: str, value: Any):
+        self.symbol_table[name] = value
+
+    def get(self, name: str):
+        if name in self.symbol_table:
+            return self.symbol_table[name]
+        return NilFlag()
+
+    def contains(self, name: str):
+        return name in self.symbol_table
+
+
+class ScopeStack:
+    scopes: List[Scope] = []
+
+    def __init__(self, scopes: Optional[List[Scope]]):
+        if scopes is not None:
+            self.scopes = scopes
+        else:
+            self.scopes = []
+
+    def __iter__(self):
+        return iter(self.scopes)
+
+    def find_missing_scopes(self, scopes: "ScopeStack"):
+        missing_scopes: List[Scope] = []
+        for scope in scopes:
+            if scope not in self.scopes:
+                missing_scopes.append(scope)
+        return missing_scopes
+
+    def get(self, name: str):
+        for scope in reversed(self.scopes):
+            result = scope.get(name)
+            if not isinstance(result, NilFlag):
+                return result
+        return None
+
+    def set(self, name: str, value: Any):
+        for scope in reversed(self.scopes):
+            if scope.contains(name):
+                scope.set(name, value)
+                return True
+        return False
+
+    def push(self, scope: Scope):
+        self.scopes.append(scope)
+
+    def pop(self):
+        return self.scopes.pop()
+
 class BytecodeInterpreter:
     # general
     def execute_create(self, code):
         assert code.code == Mnemonics.CREATE
         symbol_name = self.get_symbol_name_or_value(code.name)
-        self.current_table[symbol_name] = None
+        self.push(symbol_name, None)
 
     def execute_push(self, code):
         assert code.code in [Mnemonics.PUSH_IDENTIFIER, Mnemonics.PUSH_VALUE]
         set_value = self.get_symbol_name_or_value(code.identifier)
         get_value = self.get(code.value)
-        self.current_table[set_value] = get_value
+        self.push(set_value, get_value)
 
     # jumps
     def execute_jump(self, code):
@@ -65,11 +131,17 @@ class BytecodeInterpreter:
     def execute_function(self, code):
         assert code.code == Mnemonics.FUNCTION
         symbol_name = self.get_symbol_name_or_value(code.name)
-        fun = BytecodeInterpreterFunction(self.pc, code.arguments)
-        for arg in fun.arguments:
-            fun.symbols[self.get_symbol_name_or_value(arg)] = None
 
-        self.current_table[symbol_name] = fun
+        new_stack = ScopeStack(None)
+        for scope in self.scope_stack:
+            new_stack.push(scope)
+        new_stack.push(self.current_scope)
+
+        fun = BytecodeInterpreterFunction(self.pc, code.arguments, new_stack)
+        for arg in fun.arguments:
+            fun.scope.set(self.get_symbol_name_or_value(arg), None)
+
+        self.set(symbol_name, fun)
         self.pc += code.num_instructions
 
     def execute_call(self, code):
@@ -92,17 +164,23 @@ class BytecodeInterpreter:
             arguments.append(self.get(arg))
 
         self.push_stack()
-        self.current_table = fun.symbols
+        missing_scopes = self.scope_stack.find_missing_scopes(fun.scope_stack)
+        for scope in missing_scopes:
+            self.scope_stack.push(scope)
+
+        self.current_scope = fun.scope
 
         for arg in fun.arguments:
             symbol = self.get_symbol_name_or_value(arg)
-            self.current_table[symbol] = arguments.pop(0)
+            self.set(symbol, arguments.pop(0))
 
         result = self.execute_at(fun.address)
+        for scope in missing_scopes:
+            self.scope_stack.pop()
         self.pop_stack()
 
         if save_result:
-            self.current_table[addr] = result
+            self.set(addr, result)
 
         return None
 
@@ -118,13 +196,13 @@ class BytecodeInterpreter:
 
     def execute_frame(self, code):
         assert code.code == Mnemonics.FRAME
-        self.symbols.append(self.current_table)
-        self.current_table = {}
+        self.scope_stack.push(self.current_scope)
+        self.current_scope = Scope(None)
 
     def execute_raze(self, code):
         assert code.code == Mnemonics.RAZE
-        if len(self.symbols) > 0:
-            self.current_table = self.symbols.pop()
+        if len(self.scope_stack.scopes) > 0:
+            self.current_scope = self.scope_stack.pop()
 
     # comparisons
     equals_closure = BinaryEvaluator(lambda a, b: a == b, Mnemonics.EQUALS)
@@ -190,23 +268,26 @@ class BytecodeInterpreter:
     }
     assert len(execute_byte.keys()) == len(Mnemonics)
     stack = []
-    symbols = []
-    current_table = {}
+    scope_stack   : ScopeStack = ScopeStack(None)
+    current_scope : Scope = Scope(None)
     pc = 0
     bytecodes: List[Bytecode] = None
 
-    def push(self, name, callback):
-        self.current_table[name] = BytecodeInterpreterNativeFunction(callback)
+    def push_native(self, name, callback):
+        self.current_scope.set(name, BytecodeInterpreterNativeFunction(callback))
+
+    def push(self, name, value):
+        self.current_scope.set(name, value)
 
     def push_stack(self):
         self.stack.append(self.pc)
-        self.symbols.append(self.current_table)
-        self.current_table = {}
+        self.scope_stack.push(self.current_scope)
+        self.current_scope = Scope(None)
 
     def pop_stack(self):
         if len(self.stack) > 0:
             self.pc = self.stack.pop()
-            self.current_table = self.symbols.pop()
+            self.current_scope = self.scope_stack.pop()
 
     def get_symbol_name_or_value(self, atom: Union[Identifier, Value]):
         return atom.value
@@ -214,13 +295,21 @@ class BytecodeInterpreter:
     def get(self, atom: Union[Identifier, Value]):
         assert isinstance(atom, (Identifier, Value))
         if isinstance(atom, Identifier):
-            if atom.value in self.current_table:
-                return self.current_table[atom.value]
-            for table in reversed(self.symbols):
-                if atom.value in table:
-                    return table[atom.value]
-            raise RuntimeError("unknown symbol '" + atom.value + "'")
+            if self.current_scope.contains(atom.value):
+                return self.current_scope.get(atom.value)
+
+            value = self.scope_stack.get(atom.value)
+            if isinstance(value, NilFlag):
+                raise RuntimeError("unknown symbol '" + atom.value + "'")
+            return value
         return atom.value
+
+    def set(self, name: str, value: Any):
+        if self.current_scope.contains(name):
+            self.current_scope.set(name, value)
+            return
+        if not self.scope_stack.set(name, value):
+            self.push(name, value)
 
     def execute_at(self, address: int):
         self.pc = address + 1
@@ -253,20 +342,19 @@ class NilFlag:
 
 NativeCallback = Callable[[Any, BytecodeInterpreter, list[Union[Identifier, Value]]], Any]
 class BytecodeInterpreterNativeFunction:
-    symbols      : map
     callback     : NativeCallback
     def __init__(self, callback: NativeCallback):
-        self.symbols  = {}
         self.callback = callback
 
     def __call__(self, interpreter: BytecodeInterpreter, args: list[Any]):
         return self.callback(interpreter, args)
 
 class BytecodeInterpreterFunction:
-    symbols  : map
+    scope_stack : ScopeStack
+    scope       : Scope = Scope(None)
     arguments: list[Identifier]
     address  : int
-    def __init__(self, address, arguments):
-        self.symbols = {}
-        self.arguments = arguments
-        self.address   = address
+    def __init__(self, address, arguments, scope_stack: ScopeStack):
+        self.arguments   = arguments
+        self.address     = address
+        self.scope_stack = scope_stack

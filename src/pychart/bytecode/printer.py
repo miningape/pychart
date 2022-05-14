@@ -35,8 +35,24 @@ class BytecodePrinter:
         out += '\t'
         return out
 
+    def label_print(self, code):
+        out = ''
+        if self.function_len != 0:
+            out += '\t'
+            self.counter += 1
+            self.function_len -= 1
+        elif self.counter != 0:
+            out += '\n'
+            self.counter = 0
+        out += code.identifier + ':\t'
+        print(out)
+
     def generic_print(self, i, code):
-        print(self.common(i, code))
+        if isinstance(code, Label):
+            self.label_print(code)
+        else:
+            print(self.common(i, code))
+
 
     def create_print(self, i, code):
         out = self.common(i, code)
@@ -50,6 +66,16 @@ class BytecodePrinter:
         out += identifier_or_value_to_string(code.value)
         print(out)
 
+    def return_print(self, i, code):
+        out = self.common(i, code)
+
+        if isinstance(code.value, Identifier):
+            out += demangle(code.value.value)
+        elif isinstance(code.value, Value):
+            out += str(code.value.value)
+        else:
+            out += 'None'
+        print(out)
 
     binary_name_map : Dict[Bytecode, str] = {
         Addition         : 'add',
@@ -103,7 +129,10 @@ class BytecodePrinter:
 
         if isinstance(code, (JumpIfTrue, JumpIfNotTrue)):
             out += demangle(code.condition.value) + ',\t'
-        out += str(code.location)
+        if isinstance(code.location, Label):
+            out += code.location.identifier
+        else:
+            out += str(code.location)
         print(out)
 
     def call_print(self, i, code):
@@ -142,7 +171,7 @@ class BytecodePrinter:
         # function
         Mnemonics.FUNCTION        : function_print,
         Mnemonics.CALL            : call_print,
-        Mnemonics.RETURN          : generic_print,
+        Mnemonics.RETURN          : return_print,
 
         # comparisons
         Mnemonics.EQUALS               : binary_print,
