@@ -59,4 +59,30 @@ while(deeznut < kyle) {
   deeznut = deeznut + 1;
   break;
 }
+let stuff = [1, 2, 3];
+
+func map(a, fn) {
+  let pos = 0;
+  let array = a;
+
+  while (pos < len(array)) {
+    array[pos] = fn(array[pos]);
+    pos = pos + 1;
+  }
+
+  array;
+}
+
+func square(num) { num * num; }
+
+func t20(num) {
+  num = 20;
+}
+
+print(map(stuff, square));
+print(stuff);
+
+
+
+
 

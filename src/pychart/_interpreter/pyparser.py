@@ -9,12 +9,15 @@ from src.pychart._interpreter.ast_nodes.statement import (
     Return,
     Stmt,
     Let,
-    While
+    While,
 )
 from src.pychart._interpreter.ast_nodes.expression import (
+    Array,
     Assignment,
     Binary,
     Call,
+    Index,
+    IndexSet,
     Unary,
     Grouping,
     Expr,
@@ -93,12 +96,13 @@ class Parser:
     def while_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after WHILE keyword')
         while_test = self.expression()
-        self.consume( TokenType.RIGHT_PEREN, 'Expected ")" after expression in WHILE statement' )
+        self.consume(
+            TokenType.RIGHT_PEREN, 'Expected ")" after expression in WHILE statement'
+        )
 
         while_body = self.statement()
 
         return While(while_test, while_body)
-
 
     def if_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PEREN, 'Expected "(" after IF keyword')
@@ -215,6 +219,9 @@ class Parser:
             if isinstance(expr, Variable):
                 return Assignment(expr.name, value)
 
+            if isinstance(expr, Index):
+                return IndexSet(expr, value)
+
             self.error(equals, "Could not assign target")
 
         return expr
@@ -275,7 +282,22 @@ class Parser:
 
             return Unary(operator, right)
 
-        return self.call()
+        return self.index()
+
+    def index(self) -> Expr:
+        expr = self.call()
+
+        while True:
+            if self.match(TokenType.LEFT_BRACK):
+                index = self.expression()
+
+                self.consume(TokenType.RIGHT_BRACK, "Expected ']' following expression")
+
+                expr = Index(expr, index)
+            else:
+                break
+
+        return expr
 
     def call(self) -> Expr:
         expr = self.primary()
@@ -318,6 +340,17 @@ class Parser:
             expr = self.expression()
             self.consume(TokenType.RIGHT_PEREN, "Cannot match )")
             return Grouping(expr)
+
+        if self.match(TokenType.LEFT_BRACK):
+            elems: List[Expr] = []
+            if not self.check(TokenType.RIGHT_BRACK):
+                elems.append(self.expression())
+
+                while self.match(TokenType.COMMA):
+                    elems.append(self.expression())
+
+            self.consume(TokenType.RIGHT_BRACK, "Expected ']' following '['")
+            return Array(elems)
 
         if self.match(TokenType.IDENTIFIER):
             return Variable(self.previous())
