@@ -51,6 +51,17 @@ const variables: variableType = {
         callee: "Expr",
         arguments: "List[Expr]",
       },
+      Array: {
+        elems: "List[Expr]",
+      },
+      Index: {
+        indexee: "Expr",
+        index: "Expr",
+      },
+      IndexSet: {
+        index: "Index",
+        value: "Expr",
+      },
     },
   },
   Stmt: {

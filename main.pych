@@ -1,9 +1,27 @@
-let kyle = 3;
-let deeznut = 0;
+let stuff = [1, 2, 3];
 
-while(deeznut < kyle) {
-  print("play ! :) explore :o ! create <3 !");
-  deeznut = deeznut + 1;
-  break;
+func map(a, fn) {
+  let pos = 0;
+  let array = a;
+
+  while (pos < len(array)) {
+    array[pos] = fn(array[pos]);
+    pos = pos + 1;
+  }
+
+  array;
 }
+
+func square(num) { num * num; }
+
+func t20(num) {
+  num = 20;
+}
+
+print(map(stuff, square));
+print(stuff);
+
+
+
+
 
