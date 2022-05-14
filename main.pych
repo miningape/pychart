@@ -1,11 +1,11 @@
 let stuff = [1, 2, 3];
 
-func $map(array, fn) {
+func map(array, fn) {
   let pos = 0;
   let rtn = [];
 
-  while (pos < $len(array)) {
-    $push( rtn, fn(array[pos]) );
+  while (pos < len(array)) {
+    push( rtn, fn(array[pos]) );
     pos = pos + 1;
   }
 
@@ -14,7 +14,7 @@ func $map(array, fn) {
 
 func square(num) { num * num; }
 
-print($map(stuff, square));
+print(map(stuff, square));
 
 
 

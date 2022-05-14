@@ -13,9 +13,9 @@ from src.pychart._interpreter.pyparser import Parser
 native_functions: Dict[str, PychartCallable] = {
     "input": InputFunc(),
     "print": PrintFunc(),
-    "$push": ArrayMethods.Push(),
-    "$pop": ArrayMethods.Pop(),
-    "$len": ArrayMethods.Length(),
+    "push": ArrayMethods.Push(),
+    "pop": ArrayMethods.Pop(),
+    "len": ArrayMethods.Length(),
 }
 
 
