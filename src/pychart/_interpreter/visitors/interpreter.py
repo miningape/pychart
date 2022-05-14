@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Dict, List, Tuple
 from src.pychart._interpreter.ast_nodes.expression import (
     Array,
@@ -8,6 +9,7 @@ from src.pychart._interpreter.ast_nodes.expression import (
     ExprVisitor,
     Grouping,
     Index,
+    IndexSet,
     Literal,
     Unary,
     Variable,
@@ -148,6 +150,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
         indexable = PychartIndexable.from_expr(expr.indexee(self))
         return indexable.get(expr.index(self))
 
+    def indexset(self, expr: IndexSet) -> Any:
+        indexable = PychartIndexable.from_expr(expr.index.indexee(self))
+
+        index = expr.index.index(self)
+        value = expr.value(self)
+
+        return indexable.set(index, value)
+
     # Statement Visitor
     def expression(self, stmt: Expression) -> Any:
         return stmt.expr(self)
@@ -207,6 +217,17 @@ class PychartArray(PychartIndexable):
     def __init__(self, elems: List[Any]) -> None:
         self.elems = elems
 
+    def set(self, index: Any, value: Any) -> Any:
+        if not isinstance(index, int):
+            raise RuntimeError(f'Array index "{index}" is not an integer')
+
+        if index >= len(self.elems) or index < 0:
+            raise RuntimeError(f'Array index "{index}" is out of bounds')
+
+        self.elems[index] = value
+
+        return value
+
     def get(self, index: Any):
         if not isinstance(index, int):
             raise RuntimeError(f'Array index "{index}" is not an integer')
@@ -249,7 +270,7 @@ class PychartFunction(PychartCallable):
         # pylint: disable=consider-using-enumerate
         for i in range(len(args)):
             self.interpreter.environment.reverve(
-                self.definition.params[i].lexeme, args[i]
+                self.definition.params[i].lexeme, deepcopy(args[i])
             )
         # pylint: enable=consider-using-enumerate
 

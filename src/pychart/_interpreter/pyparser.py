@@ -17,6 +17,7 @@ from src.pychart._interpreter.ast_nodes.expression import (
     Binary,
     Call,
     Index,
+    IndexSet,
     Unary,
     Grouping,
     Expr,
@@ -220,6 +221,9 @@ class Parser:
 
             if isinstance(expr, Variable):
                 return Assignment(expr.name, value)
+
+            if isinstance(expr, Index):
+                return IndexSet(expr, value)
 
             self.error(equals, "Could not assign target")
 

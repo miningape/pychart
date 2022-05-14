@@ -10,3 +10,6 @@ class PychartIndexable:
 
     def get(self, index: Any) -> Any:
         raise RuntimeError("Cannot index base indexable")
+
+    def set(self, index: Any, value: Any) -> Any:
+        raise RuntimeError("Cannot index base indexable")

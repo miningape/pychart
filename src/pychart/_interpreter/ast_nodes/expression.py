@@ -41,6 +41,9 @@ class ExprVisitor:
     def index(self, expr: "Index") -> Any:
         ExprVisitor.throw()
 
+    def indexset(self, expr: "IndexSet") -> Any:
+        ExprVisitor.throw()
+
     # pylint: enable=unused-argument
 
 
@@ -144,3 +147,15 @@ class Index(Expr):
 
     def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.index(self)
+
+
+class IndexSet(Expr):
+    index: Index
+    value: Expr
+
+    def __init__(self, index: Index, value: Expr):
+        self.index = index
+        self.value = value
+
+    def __call__(self, visitor: ExprVisitor) -> Any:
+        return visitor.indexset(self)

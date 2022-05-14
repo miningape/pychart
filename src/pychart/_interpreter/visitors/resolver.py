@@ -10,6 +10,7 @@ from src.pychart._interpreter.ast_nodes.expression import (
     ExprVisitor,
     Grouping,
     Index,
+    IndexSet,
     Literal,
     Unary,
     Variable,
@@ -124,6 +125,11 @@ class Resolver(ExprVisitor, StmtVisitor):
     def index(self, expr: Index) -> Any:
         self.resolve(expr.index)
         self.resolve(expr.indexee)
+        return None
+
+    def indexset(self, expr: IndexSet) -> Any:
+        self.resolve(expr.index)
+        self.resolve(expr.value)
         return None
 
     # StmtVisitor

@@ -1,20 +1,26 @@
 let stuff = [1, 2, 3];
 
-func map(array, fn) {
+func map(a, fn) {
   let pos = 0;
-  let rtn = [];
+  let array = a;
 
   while (pos < len(array)) {
-    push( rtn, fn(array[pos]) );
+    array[pos] = fn(array[pos]);
     pos = pos + 1;
   }
 
-  rtn;
+  array;
 }
 
 func square(num) { num * num; }
 
+func t20(num) {
+  num = 20;
+}
+
 print(map(stuff, square));
+print(stuff);
+
 
 
 

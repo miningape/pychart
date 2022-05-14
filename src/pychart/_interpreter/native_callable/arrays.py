@@ -26,7 +26,7 @@ class ArrayMethods:
             array = args[0]
 
             if not isinstance(array, PychartArray):
-                raise RuntimeError("push's first argument must be an array")
+                raise RuntimeError("pop's first argument must be an array")
 
             if len(array.elems) == 0:
                 raise RuntimeError("Cannot pop array of length 0")
@@ -44,7 +44,7 @@ class ArrayMethods:
             array = args[0]
 
             if not isinstance(array, PychartArray):
-                raise RuntimeError("push's first argument must be an array")
+                raise RuntimeError("len's first argument must be an array")
 
             return len(array.elems)
 

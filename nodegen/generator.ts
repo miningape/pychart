@@ -58,6 +58,10 @@ const variables: variableType = {
         indexee: "Expr",
         index: "Expr",
       },
+      IndexSet: {
+        index: "Index",
+        value: "Expr",
+      },
     },
   },
   Stmt: {
