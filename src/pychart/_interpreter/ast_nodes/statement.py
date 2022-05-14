@@ -18,7 +18,7 @@ class StmtVisitor:
     def expression(self, stmt: "Expression") -> Any:
         StmtVisitor.throw()
 
-    def print(self, stmt: "Print") -> Any:
+    def return_stmt(self, stmt: "Return") -> Any:
         StmtVisitor.throw()
 
     def let(self, stmt: "Let") -> Any:
@@ -52,14 +52,14 @@ class Expression(Stmt):
         return visitor.expression(self)
 
 
-class Print(Stmt):
+class Return(Stmt):
     expr: Expr
 
     def __init__(self, expr: Expr):
         self.expr = expr
 
     def __call__(self, visitor: StmtVisitor) -> Any:
-        return visitor.print(self)
+        return visitor.return_stmt(self)
 
 
 class Let(Stmt):
