@@ -32,6 +32,7 @@ class Scanner:
         "let": TokenType.LET,
         "false": TokenType.FALSE,
         "true": TokenType.TRUE,
+        "break": TokenType.BREAK
         # "print": TokenType.PRINT,
     }
 
@@ -134,6 +135,10 @@ class Scanner:
             self.__add_token(TokenType.DOT)
         elif char == ";":
             self.__add_token(TokenType.SEMICOLON)
+        elif char == "[":
+            self.__add_token(TokenType.LEFT_BRACK)
+        elif char == "]":
+            self.__add_token(TokenType.RIGHT_BRACK)
 
         # 1 or 2 char tokens
         elif char == "!":

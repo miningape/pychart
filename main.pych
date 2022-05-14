@@ -1,41 +1,28 @@
-let p = -10;
-print("  p: ", p);
-p = -p;
-print("- p: ", p);
-p = -!p;
-print("-!p: ", p);
-p = 10;
-p = -(p + 5);
-print("-(p + 5): ", p);
+let stuff = [1, 2, 3];
 
-let a = "Name fuckdace";
+func map(a, fn) {
+  let pos = 0;
+  let array = a;
 
-{
-  func doA() {
-    print(a);
+  while (pos < len(array)) {
+    array[pos] = fn(array[pos]);
+    pos = pos + 1;
   }
 
-  
-
-  doA();
-  let a = 5;
-  a = 20;
-  doA();
+  array;
 }
 
-let y = 10;
-y = 20;
+func square(num) { num * num; }
 
-if (y = false) {
-  print("one");
-} elif (true) {
-  print("Yay");
-} elif (false) {
-  print("Nay");
-} else {
-  print("OOF");
+func t20(num) {
+  num = 20;
 }
 
-print(y); // Error!!
+print(map(stuff, square));
+print(stuff);
 
-//print(x = 10);
+
+
+
+
+
