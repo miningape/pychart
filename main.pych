@@ -1,3 +1,64 @@
+let kyle = 3;
+let deeznut = 0;
+
+func makeCounter() {
+    let counter = 0;
+    func count() {
+      return counter = counter + 1;
+    }
+    
+    return count;
+}
+
+let counter = makeCounter();
+print(counter());  // 1
+print(counter());  // 2
+print(counter());  // 3
+
+{
+  func isGreater(a, b) {
+    if (a > b) return "Yes";
+    
+    return "No";
+  }
+
+  func fibonacci(n) {
+    if (n < 2) return n;
+
+    return fibonacci(n - 1) + fibonacci(n - 2);
+  }
+
+  func printFib(n) {
+    print(n + " : " + fibonacci(n));
+  }
+
+  func repeat(n, fn) {
+    if (n < 0) return null;
+    repeat(n - 1, fn);
+    fn(n);
+  }
+
+  repeat(0, printFib);
+}
+
+let y = 10;
+y = 20;
+
+if (y = false) {
+  print("one");
+} elif (true) {
+  print("Yay");
+} elif (false) {
+  print("Nay");
+} else {
+  print("OOF");
+}
+
+while(deeznut < kyle) {
+  print("play ! :) explore :o ! create <3 !");
+  deeznut = deeznut + 1;
+  break;
+}
 let stuff = [1, 2, 3];
 
 func map(a, fn) {

@@ -14,6 +14,7 @@ const methodNameMap: Record<string, string> = {
   if: "if_stmt",
   while: "while_stmt",
   break: "break_stmt",
+  return: "return_stmt",
 };
 
 const variables: variableType = {
@@ -76,7 +77,7 @@ const variables: variableType = {
       Expression: {
         expr: "Expr",
       },
-      Print: {
+      Return: {
         expr: "Expr",
       },
       Let: {
