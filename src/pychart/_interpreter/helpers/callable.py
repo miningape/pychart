@@ -17,7 +17,10 @@ class PychartCallable:
     def bytecode_execute(self, interpreter: Any, params: List[Any]):
         result = []
         for param in params:
-            result.append(interpreter.get(param))
+            val = interpreter.get(param)
+            if isinstance(val, dict):
+                val = list(val)
+            result.append(val)
         return self(result)
 
 

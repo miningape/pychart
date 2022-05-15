@@ -23,7 +23,7 @@ native_functions: Dict[str, PychartCallable] = {
 }
 
 class BytecodeArrayNatives:
-    def push(userdata, interpreter: Any, params: List[Any]):
+    def push(self, interpreter: Any, params: List[Any]):
         arr_name = interpreter.get_symbol_name_or_value(params[0])
         arr   = interpreter.get(params[0])
         value = interpreter.get(params[1])
@@ -31,15 +31,14 @@ class BytecodeArrayNatives:
         arr[len(arr)] = value
         interpreter.set(arr_name, arr)
 
-    def pop(userdata, interpreter: Any, params: List[Any]):
+    def pop(self, interpreter: Any, params: List[Any]):
         arr_name = interpreter.get_symbol_name_or_value(params[0])
         arr   = interpreter.get(params[0])
-        value = interpreter.get(params[1])
 
         arr.pop(len(arr) - 1, None)
         interpreter.set(arr_name, arr)
 
-    def length(userdata, interpreter: Any, params: List[Any]):
+    def length(self, interpreter: Any, params: List[Any]):
         arr   = interpreter.get(params[0])
         return len(arr)
 
