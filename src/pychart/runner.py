@@ -1,24 +1,47 @@
-from ._interpreter.scanner import Scanner
-from ._interpreter.pyparser import Parser
+from typing import Any, Dict
+from src.pychart._interpreter.helpers.callable import (
+    InputFunc,
+    PrintFunc,
+    PychartCallable,
+)
+from src.pychart._interpreter.native_callable.arrays import ArrayMethods
+from src.pychart._interpreter.visitors.interpreter import Interpreter
+from src.pychart._interpreter.visitors.resolver import Resolver
+from src.pychart._interpreter.scanner import Scanner
+from src.pychart._interpreter.pyparser import Parser
+
+native_functions: Dict[str, PychartCallable] = {
+    "input": InputFunc(),
+    "print": PrintFunc(),
+    "push": ArrayMethods.Push(),
+    "pop": ArrayMethods.Pop(),
+    "len": ArrayMethods.Length(),
+}
 
 
 def run(source: str):
-    scanner = Scanner(source)
-    tokens = scanner.get_tokens()
-    ast = Parser(tokens).parse()
+    tokens = Scanner(source).get_tokens()
+    statements = Parser(tokens).parse()
 
-    if ast is None:
-        return
+    if statements is None:
+        return None
 
-    value = ast()
+    bindings = Resolver.variable_bindings(statements, list(native_functions.keys()))
+    interpreter = Interpreter(bindings)
+
+    for (name, callablefn) in native_functions.items():
+        interpreter.environment.reverve(name, callablefn)
+
+    last_value: Any = None
 
     try:
-        value = int(value)
-    except:
-        pass
+        for statement in statements:
+            last_value = statement(interpreter)
+    except Exception as err:
+        print(f"Error: {err}")
+        print("Exiting...")
 
-    # print(f"AST: {ast}")
-    print(value)
+    return last_value
 
 
 def run_prompt():
@@ -29,9 +52,12 @@ def run_prompt():
             if line == ".exit":
                 break
 
-            run(line)
+            result = run(line)
+            if result:
+                print(result)
+
     except KeyboardInterrupt:
-        print()
+        print("Keyboard Interrupt")
         exit()
 
 

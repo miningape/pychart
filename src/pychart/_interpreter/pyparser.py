@@ -1,7 +1,29 @@
-from typing import List
-
-from .token_type import Token, TokenType
-from .expression import Binary, Expr, Unary, Literal, Grouping
+from typing import List, Optional
+from src.pychart._interpreter.token_type import Token, TokenType
+from src.pychart._interpreter.ast_nodes.statement import (
+    Block,
+    Break,
+    Expression,
+    Function,
+    If,
+    Return,
+    Stmt,
+    Let,
+    While,
+)
+from src.pychart._interpreter.ast_nodes.expression import (
+    Array,
+    Assignment,
+    Binary,
+    Call,
+    Index,
+    IndexSet,
+    Unary,
+    Grouping,
+    Expr,
+    Literal,
+    Variable,
+)
 
 
 class Parser:
@@ -12,11 +34,137 @@ class Parser:
         self.tokens = tokens
 
     def parse(self):
+        statements: List[Stmt] = []
+
         try:
-            return self.expression()
-        except RuntimeError:
-            print("Error occurred")
+            while not self.is_at_end():
+                statements.append(self.declaration())
+        except RuntimeError as err:
+            print("Error occurred", err)
             return None
+
+        return statements
+
+    def declaration(self) -> Stmt:
+        if self.match(TokenType.LET):
+            return self.var_declaration()
+
+        return self.statement()
+
+    def var_declaration(self) -> Stmt:
+        name = self.consume(TokenType.IDENTIFIER, "Expected a variable name")
+
+        initializer: Optional[Expr] = None
+
+        if self.match(TokenType.EQUAL):
+            initializer = self.expression()
+
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after variable declaration')
+        return Let(name, initializer)
+
+    def statement(self) -> Stmt:
+        if self.match(TokenType.FUNCTION):
+            return self.function()
+        if self.match(TokenType.IF):
+            return self.if_statement()
+        if self.match(TokenType.LEFT_BRACE):
+            return Block(self.block())
+        if self.match(TokenType.WHILE):
+            return self.while_statement()
+        if self.match(TokenType.BREAK):
+            return self.break_statement()
+
+        if self.match(TokenType.RETURN):
+            expr = self.expression()
+            self.consume(
+                TokenType.SEMICOLON, "Expected ';' following return expression"
+            )
+
+            return Return(expr)
+
+        return self.expression_statement()
+
+    def expression_statement(self) -> Stmt:
+        expr = self.expression()
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
+        return Expression(expr)
+
+    def break_statement(self) -> Stmt:
+        self.consume(TokenType.SEMICOLON, 'Expected ";" after expression')
+        return Break()
+
+    def while_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after WHILE keyword')
+        while_test = self.expression()
+        self.consume(
+            TokenType.RIGHT_PEREN, 'Expected ")" after expression in WHILE statement'
+        )
+
+        while_body = self.statement()
+
+        return While(while_test, while_body)
+
+    def if_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after IF keyword')
+        if_test = self.expression()
+        self.consume(
+            TokenType.RIGHT_PEREN, 'Expected ")" after expression in IF statement'
+        )
+
+        if_body = self.statement()
+        else_body = None
+
+        matched_elif = False
+        if self.match(TokenType.ELIF):
+            matched_elif = True
+            else_body = self.if_statement()
+
+        if self.match(TokenType.ELSE):
+            if matched_elif:
+                raise RuntimeError("Only 1 ELSE can be after an IF")
+            else_body = self.statement()
+
+        return If(if_test, if_body, else_body)
+
+    def function(self) -> Stmt:
+        name = self.consume(
+            TokenType.IDENTIFIER, "Expected Identifier after FUNC keyword"
+        )
+        self.consume(TokenType.LEFT_PEREN, 'Expected "(" after FUNC Identifier')
+
+        params: List[Token] = []
+        if not self.check(TokenType.RIGHT_PEREN):
+            params.append(
+                self.consume(TokenType.IDENTIFIER, "Expected identifier in arg list")
+            )
+
+            while self.match(TokenType.COMMA):
+                if len(params) > 127:
+                    self.error(self.peek(), "Too many arguments for function, max 127")
+
+                params.append(
+                    self.consume(
+                        TokenType.IDENTIFIER, "Expected identifier in arg list"
+                    )
+                )
+
+        self.consume(TokenType.RIGHT_PEREN, 'Expected ")" after argument list')
+        self.consume(
+            TokenType.LEFT_BRACE, 'Expected "{" after arg list in FUNC declaration'
+        )
+        body = self.block()
+
+        return Function(name, params, body)
+
+    def block(self) -> List[Stmt]:
+        statements: List[Stmt] = []
+
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
+            statements.append(self.declaration())
+
+        self.consume(TokenType.RIGHT_BRACE, 'Expected "}" after block')
+
+        return statements
 
     def previous(self) -> Token:
         return self.tokens[self.current - 1]
@@ -53,13 +201,30 @@ class Parser:
 
     def error(self, token: Token, message: str):
         if token.token_type == TokenType.EOF:
-            print("Is at end")
+            print(f"At end of line: {message}")
         else:
-            print(f"{token.line} at end. {message}")
+            print(f"Line {token.line}, unable to match. {message}")
         raise RuntimeError()
 
     def expression(self) -> Expr:
-        return self.equality()
+        return self.assignment()
+
+    def assignment(self) -> Expr:
+        expr = self.equality()
+
+        if self.match(TokenType.EQUAL):
+            equals = self.previous()
+            value = self.assignment()
+
+            if isinstance(expr, Variable):
+                return Assignment(expr.name, value)
+
+            if isinstance(expr, Index):
+                return IndexSet(expr, value)
+
+            self.error(equals, "Could not assign target")
+
+        return expr
 
     def equality(self) -> Expr:
         expr = self.comparison()
@@ -117,7 +282,48 @@ class Parser:
 
             return Unary(operator, right)
 
-        return self.primary()
+        return self.index()
+
+    def index(self) -> Expr:
+        expr = self.call()
+
+        while True:
+            if self.match(TokenType.LEFT_BRACK):
+                index = self.expression()
+
+                self.consume(TokenType.RIGHT_BRACK, "Expected ']' following expression")
+
+                expr = Index(expr, index)
+            else:
+                break
+
+        return expr
+
+    def call(self) -> Expr:
+        expr = self.primary()
+
+        while True:
+            if self.match(TokenType.LEFT_PEREN):
+                expr = self.finish_call(expr)
+            else:
+                break
+
+        return expr
+
+    def finish_call(self, callee: Expr) -> Expr:
+        args: List[Expr] = []
+
+        if not self.check(TokenType.RIGHT_PEREN):
+            args.append(self.expression())
+
+            while self.match(TokenType.COMMA):
+                if len(args) > 127:
+                    self.error(self.peek(), "Too many arguments in function, max 127")
+                args.append(self.expression())
+
+        self.consume(TokenType.RIGHT_PEREN, 'Expected ")" after function arguments.')
+
+        return Call(callee, args)
 
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):
@@ -135,4 +341,18 @@ class Parser:
             self.consume(TokenType.RIGHT_PEREN, "Cannot match )")
             return Grouping(expr)
 
-        self.error(self.peek(), "Expect expression")
+        if self.match(TokenType.LEFT_BRACK):
+            elems: List[Expr] = []
+            if not self.check(TokenType.RIGHT_BRACK):
+                elems.append(self.expression())
+
+                while self.match(TokenType.COMMA):
+                    elems.append(self.expression())
+
+            self.consume(TokenType.RIGHT_BRACK, "Expected ']' following '['")
+            return Array(elems)
+
+        if self.match(TokenType.IDENTIFIER):
+            return Variable(self.previous())
+
+        self.error(self.peek(), "Could not match to an expression")

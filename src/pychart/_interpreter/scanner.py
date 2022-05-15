@@ -24,6 +24,7 @@ class Scanner:
     keywords: Dict[str, TokenType] = {
         "if": TokenType.IF,
         "else": TokenType.ELSE,
+        "elif": TokenType.ELIF,
         "func": TokenType.FUNCTION,
         "return": TokenType.RETURN,
         "while": TokenType.WHILE,
@@ -31,7 +32,8 @@ class Scanner:
         "let": TokenType.LET,
         "false": TokenType.FALSE,
         "true": TokenType.TRUE,
-        "print": TokenType.PRINT,
+        "break": TokenType.BREAK
+        # "print": TokenType.PRINT,
     }
 
     def __init__(self, program_text: str):
@@ -133,6 +135,10 @@ class Scanner:
             self.__add_token(TokenType.DOT)
         elif char == ";":
             self.__add_token(TokenType.SEMICOLON)
+        elif char == "[":
+            self.__add_token(TokenType.LEFT_BRACK)
+        elif char == "]":
+            self.__add_token(TokenType.RIGHT_BRACK)
 
         # 1 or 2 char tokens
         elif char == "!":

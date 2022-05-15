@@ -9,6 +9,8 @@ class TokenType(Enum):
     RIGHT_PEREN = auto()
     LEFT_BRACE = auto()
     RIGHT_BRACE = auto()
+    LEFT_BRACK = auto()
+    RIGHT_BRACK = auto()
 
     # Punctuation
     COMMA = auto()
@@ -42,11 +44,13 @@ class TokenType(Enum):
     NULL = auto()
     IF = auto()
     ELSE = auto()
+    ELIF = auto()
     WHILE = auto()
     FUNCTION = auto()
     RETURN = auto()
-    PRINT = auto()
+    # PRINT = auto()
     LET = auto()
+    BREAK = auto()
 
     # End Of File
     EOF = auto()
