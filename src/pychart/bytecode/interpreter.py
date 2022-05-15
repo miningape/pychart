@@ -10,7 +10,9 @@ class BinaryEvaluator:
 
     def evaluate(self, interpreter, code):
         assert code.code == self.mnemonic
-        result_symbol = interpreter.get_symbol_name_or_value(code.destination)
+        result_symbol = None
+        if code.destination is not None:
+            interpreter.get_symbol_name_or_value(code.destination)
         left  = interpreter.get(code.left )
         right = interpreter.get(code.right)
 
@@ -19,7 +21,8 @@ class BinaryEvaluator:
         if isinstance(right, str) and not isinstance(left, str):
             left = str(left)
 
-        interpreter.set(result_symbol, self.evaluator(left, right))
+        if result_symbol is not None:
+            interpreter.set(result_symbol, self.evaluator(left, right))
 
 class UnaryEvaluator:
     evaluator: Callable[[Any], Any]
@@ -155,7 +158,10 @@ class BytecodeInterpreter:
 
         fun = self.get(code.identifier)
         if isinstance(fun, BytecodeInterpreterNativeFunction):
-            return fun(self, code.arguments)
+            result = fun(self, code.arguments)
+            if save_result:
+                self.set(addr, result)
+            return None
 
         assert isinstance(fun, BytecodeInterpreterFunction)
         arguments = []
