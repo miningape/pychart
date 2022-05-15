@@ -224,7 +224,55 @@ class BytecodeInterpreter:
     sign_closure           = UnaryEvaluator(lambda v: +v, Mnemonics.SIGN)
     negate_closure         = UnaryEvaluator(lambda v: -v, Mnemonics.NEGATE)
 
+    # array
+    def execute_array(self, code):
+        values = {}
+        for (i, value) in enumerate(code.values):
+            values[i] = self.get(value)
 
+        if code.name is not None:
+            symbol_name = self.get_symbol_name_or_value(code.name)
+            self.set(symbol_name, values)
+
+    def execute_array_get_at_index(self, code):
+        arr = self.get(code.array)
+        index = self.get(code.index)
+
+        value = None
+        if isinstance(index, float):
+            if index > len(arr):
+                index = None
+            elif index < 0:
+                if index < -len(arr):
+                    index = None
+                else:
+                    index = len(arr) + index
+
+        if index is not None:
+            value = arr[index]
+
+        if code.result is not None:
+            symbol_name = self.get_symbol_name_or_value(code.result)
+            self.set(symbol_name, value)
+
+    def execute_array_set_at_index(self, code):
+        arr_name = self.get_symbol_name_or_value(code.array)
+        arr   = self.get(code.array)
+        index = self.get(code.index)
+        value = self.get(code.value)
+
+        if isinstance(index, float):
+            if index > len(arr):
+                index = None
+            elif index < 0:
+                if index < -len(arr):
+                    index = None
+                else:
+                    index = len(arr) + index
+
+        if index is not None:
+            arr[index] = value
+            self.set(arr_name, arr)
     # -----
 
     execute_byte : dict[Mnemonics, Callable[[Any, Bytecode], Any] ] = {
@@ -265,6 +313,11 @@ class BytecodeInterpreter:
         Mnemonics.MULTIPLICATION : multiplication_closure.evaluate,
         Mnemonics.SIGN           : sign_closure.evaluate,
         Mnemonics.NEGATE         : negate_closure.evaluate,
+
+        # array
+        Mnemonics.ARRAY              : execute_array,
+        Mnemonics.ARRAY_GET_AT_INDEX : execute_array_get_at_index,
+        Mnemonics.ARRAY_SET_AT_INDEX : execute_array_set_at_index,
     }
     assert len(execute_byte.keys()) == len(Mnemonics)
     stack = []

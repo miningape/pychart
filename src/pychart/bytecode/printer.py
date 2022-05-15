@@ -69,10 +69,8 @@ class BytecodePrinter:
     def return_print(self, i, code):
         out = self.common(i, code)
 
-        if isinstance(code.value, Identifier):
-            out += demangle(code.value.value)
-        elif isinstance(code.value, Value):
-            out += str(code.value.value)
+        if code.value is not None:
+            out += identifier_or_value_to_string(code.value)
         else:
             out += 'None'
         print(out)
@@ -95,7 +93,12 @@ class BytecodePrinter:
     def binary_print(self, i, code):
         name = self.binary_name_map[type(code)]
         out = self.common(i, code, alternative_bytecode=name)
-        out += demangle(code.destination.value) + ', '
+
+        if code.destination is not None:
+            out += identifier_or_value_to_string(code.destination)
+        else:
+            out += 'None'
+        out += ', '
 
         out += identifier_or_value_to_string(code.left)
         out += ', '
@@ -106,8 +109,12 @@ class BytecodePrinter:
         name = None
         if isinstance(code, LogicalNot):
             name = 'not'
-        out = self.common(i, code, alternative_bytecode=name)
-        out += demangle(code.destination.value) + ', '
+        if code.destination is not None:
+            out += identifier_or_value_to_string(code.destination)
+        else:
+            out += 'None'
+
+        out += ', '
 
         out += identifier_or_value_to_string(code.value)
         print(out)
@@ -139,18 +146,61 @@ class BytecodePrinter:
         out = self.common(i, code)
 
         if code.destination is not None:
-            out += code.destination.value
+            out += identifier_or_value_to_string(code.destination)
         else:
             out += 'None'
 
         out += ', '
-        out += demangle(code.identifier.value)
+        out += identifier_or_value_to_string(code.identifier)
         out += ', ['
         for arg in code.arguments:
             out += identifier_or_value_to_string(arg)
             if code.arguments.index(arg) != len(code.arguments) - 1:
                 out += ', '
         out += ']'
+        print(out)
+    
+    def array_print(self, i, code):
+        out = self.common(i, code)
+
+        if code.name is not None:
+            out += identifier_or_value_to_string(code.name)
+        else:
+            out += 'None'
+
+        out += ', ['
+        for arg in code.values:
+            out += identifier_or_value_to_string(arg)
+            if code.values.index(arg) != len(code.values) - 1:
+                out += ', '
+        out += ']'
+        print(out)
+
+    def array_get_print(self, i, code):
+        out = self.common(i, code, alternative_bytecode='arrget')
+
+        if code.result is not None:
+            out += identifier_or_value_to_string(code.result)
+        else:
+            out += 'None'
+        out += ', '
+
+        out += identifier_or_value_to_string(code.array)
+        out += ', '
+
+        out += identifier_or_value_to_string(code.index)
+        print(out)
+
+    def array_set_print(self, i, code):
+        out = self.common(i, code, alternative_bytecode='arrset')
+
+        out += identifier_or_value_to_string(code.array)
+        out += ', '
+
+        out += identifier_or_value_to_string(code.index)
+        out += ', '
+
+        out += identifier_or_value_to_string(code.value)
         print(out)
 
     print_byte : Dict[Mnemonics, Callable[[Any, Bytecode], Any]] = {
@@ -191,6 +241,11 @@ class BytecodePrinter:
         Mnemonics.MULTIPLICATION : binary_print,
         Mnemonics.SIGN           : unary_print,
         Mnemonics.NEGATE         : unary_print,
+
+        # array
+        Mnemonics.ARRAY              : array_print,
+        Mnemonics.ARRAY_GET_AT_INDEX : array_get_print,
+        Mnemonics.ARRAY_SET_AT_INDEX : array_set_print,
     }
     assert len(print_byte.keys()) == len(Mnemonics)
 

@@ -29,7 +29,6 @@ class Mnemonics(Enum):
     LOGICAL_AND         = auto()
     LOGICAL_OR          = auto()
     LOGICAL_NOT         = auto()
-
     # arithmetic
     ADDITION            = auto()
     SUBTRACTION         = auto()
@@ -37,6 +36,11 @@ class Mnemonics(Enum):
     MULTIPLICATION      = auto()
     SIGN                = auto()
     NEGATE              = auto()
+    # array
+    ARRAY               = auto()
+    ARRAY_GET_AT_INDEX  = auto()
+    ARRAY_SET_AT_INDEX  = auto()
+
 
 def union_contains(union: Union, value: Any) -> bool:
     return isinstance(value, union.__args__)

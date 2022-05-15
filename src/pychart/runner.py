@@ -22,6 +22,29 @@ native_functions: Dict[str, PychartCallable] = {
     "len": ArrayMethods.Length(),
 }
 
+class BytecodeArrayNatives:
+    def push(userdata, interpreter: Any, params: List[Any]):
+        arr_name = interpreter.get_symbol_name_or_value(params[0])
+        arr   = interpreter.get(params[0])
+        value = interpreter.get(params[1])
+
+        arr[len(arr)] = value
+        interpreter.set(arr_name, arr)
+
+    def pop(userdata, interpreter: Any, params: List[Any]):
+        arr_name = interpreter.get_symbol_name_or_value(params[0])
+        arr   = interpreter.get(params[0])
+        value = interpreter.get(params[1])
+
+        arr.pop(len(arr) - 1, None)
+        interpreter.set(arr_name, arr)
+
+    def length(userdata, interpreter: Any, params: List[Any]):
+        arr   = interpreter.get(params[0])
+        return len(arr)
+
+
+
 def run_bytecode(filename: str, should_print: bool):
     source = None
     with open(filename, "r", encoding="utf-8") as contents:
@@ -45,8 +68,15 @@ def run_bytecode(filename: str, should_print: bool):
         bytecodes = solve_block(bytecodes)
 
     interp = BytecodeInterpreter()
-    for (name, callablefn) in native_functions.items():
-        interp.push_native(name, callablefn.bytecode_execute)
+
+    interp.push_native("input", InputFunc().bytecode_execute)
+    interp.push_native("print", PrintFunc().bytecode_execute)
+
+    array_natives = BytecodeArrayNatives()
+    interp.push_native("push", array_natives.push)
+    interp.push_native("pop", array_natives.pop)
+    interp.push_native("len", array_natives.length)
+
     return interp.execute(bytecodes)
 
 

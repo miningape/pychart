@@ -171,11 +171,10 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
             if isinstance(value, Literal):
                 self.push(bt.Push(identifier, bt.Value(value.value)))
             elif isinstance(value, Variable):
-                value_name = self.get_identifier(value.name.lexeme)
+                value_name = self.get_identifier(value.name.lexeme).name
                 self.push(bt.Push(identifier, value_name))
             elif isinstance(value, BytecodeExpression):
-                temporary = self.gen_bytecode_expression(value)
-                self.push(bt.Push(identifier, temporary))
+                self.push(value(identifier))
             else:
                 raise RuntimeError("invalid initialiser")
 
@@ -399,8 +398,7 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
         left_val  = bt.Identifier('.tmp' + str(self.next_id()))
         right_val = bt.Identifier('.tmp' + str(self.next_id()))
         if isinstance(left, Variable):
-            left_val = self.get_identifier(left.name.lexeme).name.value
-            left_val = bt.Identifier(left_val)
+            left_val = self.get_identifier(left.name.lexeme).name
         elif isinstance(left, Literal):
             left_val = bt.Value(left.value)
         else:
@@ -411,8 +409,7 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
                 self.push(set_value)
 
         if isinstance(right, Variable):
-            right_val = self.get_identifier(right.name.lexeme).name.value
-            right_val = bt.Identifier(right_val)
+            right_val = self.get_identifier(right.name.lexeme).name
         elif isinstance(right, Literal):
             right_val = bt.Value(right.value)
         else:
@@ -502,3 +499,82 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
 
         return BytecodeExpression(lambda result:
                 bt.Call(result, self.get_identifier(function_name).name, args))
+
+    def array(self, expr: Array) -> Any:
+        elements : List[Any] = []
+        for elem in expr.elems:
+            val = elem(self)
+            if isinstance(val, Variable):
+                name = val.name.lexeme
+                if self.get_identifier(name) is not None:
+                    elements.append(self.get_identifier(name).name)
+                else:
+                    raise RuntimeError(f"no variable named {name}")
+            elif isinstance(val, Literal):
+                elements.append(bt.Value(val.value))
+            elif isinstance(val, BytecodeExpression):
+                temporary = self.gen_bytecode_expression(val)
+                elements.append(temporary)
+            else:
+                raise RuntimeError("invalid array")
+        return BytecodeExpression(lambda result: bt.Array(result, elements))
+
+    def solve_index(self, expr: Index):
+        obj   = expr.indexee(self)
+        index = expr.index(self)
+
+        if isinstance(obj, Literal):
+            raise RuntimeError('cannot use subscript on literals')
+
+        temporary = None
+        if isinstance(obj, Variable):
+            name = obj.name.lexeme
+            if self.get_identifier(name) is not None:
+                temporary = self.get_identifier(name).name
+            else:
+                raise RuntimeError(f"no variable named {name}")
+        elif isinstance(obj, BytecodeExpression):
+            temporary = self.gen_bytecode_expression(obj)
+
+        if temporary is None:
+            raise RuntimeError('unexpected program state, index temporary was none')
+
+        index_value = None
+        if isinstance(index, Variable):
+            name = index.name.lexeme
+            if self.get_identifier(name) is not None:
+                index_value = self.get_identifier(name).name
+            else:
+                raise RuntimeError(f"no variable named {name}")
+        elif isinstance(index, Literal):
+            index_value = bt.Value(index.value)
+        elif isinstance(index, BytecodeExpression):
+            index_value = self.gen_bytecode_expression(index)
+        else:
+            raise RuntimeError('unexpected program state, index was an unknown type')
+
+        return (temporary, index_value)
+    def index(self, expr: Index) -> Any:
+        (obj, index) = self.solve_index(expr)
+
+        return BytecodeExpression(lambda result: bt.ArrayGetAtIndex(result, obj, index))
+
+    def indexset(self, expr: IndexSet) -> Any:
+        (obj, index) = self.solve_index(expr.index)
+
+        val = expr.value(self)
+        value = None
+        if isinstance(val, Variable):
+            name = val.name.lexeme
+            if self.get_identifier(name) is not None:
+                value = self.get_identifier(name).name
+            else:
+                raise RuntimeError(f"no variable named {name}")
+        elif isinstance(val, Literal):
+            value = bt.Value(val.value)
+        elif isinstance(val, BytecodeExpression):
+            value = self.gen_bytecode_expression(val)
+        else:
+            raise RuntimeError("invalid array")
+
+        return BytecodeExpression(lambda result: bt.ArraySetAtIndex(obj, index, value))
