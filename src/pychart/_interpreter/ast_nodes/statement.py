@@ -18,7 +18,7 @@ class StmtVisitor:
     def expression(self, stmt: "Expression") -> Any:
         StmtVisitor.throw()
 
-    def print(self, stmt: "Print") -> Any:
+    def return_stmt(self, stmt: "Return") -> Any:
         StmtVisitor.throw()
 
     def let(self, stmt: "Let") -> Any:
@@ -31,6 +31,12 @@ class StmtVisitor:
         StmtVisitor.throw()
 
     def if_stmt(self, stmt: "If") -> Any:
+        StmtVisitor.throw()
+
+    def while_stmt(self, stmt: "While") -> Any:
+        StmtVisitor.throw()
+
+    def break_stmt(self, stmt: "Break") -> Any:
         StmtVisitor.throw()
 
     # pylint: enable=unused-argument
@@ -46,14 +52,14 @@ class Expression(Stmt):
         return visitor.expression(self)
 
 
-class Print(Stmt):
+class Return(Stmt):
     expr: Expr
 
     def __init__(self, expr: Expr):
         self.expr = expr
 
     def __call__(self, visitor: StmtVisitor) -> Any:
-        return visitor.print(self)
+        return visitor.return_stmt(self)
 
 
 class Let(Stmt):
@@ -104,3 +110,23 @@ class If(Stmt):
 
     def __call__(self, visitor: StmtVisitor) -> Any:
         return visitor.if_stmt(self)
+
+
+class While(Stmt):
+    while_test: Expr
+    while_body: Stmt
+
+    def __init__(self, while_test: Expr, while_body: Stmt):
+        self.while_test = while_test
+        self.while_body = while_body
+
+    def __call__(self, visitor: StmtVisitor) -> Any:
+        return visitor.while_stmt(self)
+
+
+class Break(Stmt):
+    def __init__(self):
+        pass
+
+    def __call__(self, visitor: StmtVisitor) -> Any:
+        return visitor.break_stmt(self)
