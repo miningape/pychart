@@ -191,10 +191,6 @@ class Scanner:
 
         # Whitespace
         elif char == " " or char == "\r" or char == "\t":
-            """
-            note:
-            could be replaced with a char in frozenset({' ', '\r', '\t'}) could be more efficient 
-            """
             # Ignore whitespace
             pass
         elif char == "\n":
@@ -208,7 +204,6 @@ class Scanner:
         elif char.isalpha():
             self.__identifier()
         else:
-            """ Should throw error currently characters like '$', '#' are just ignored"""
             pass  # Throw error -> unrecognised token
 
     def get_tokens(self) -> List[Token]:
