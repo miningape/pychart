@@ -49,6 +49,15 @@ class ExprVisitor:
     def call(self, expr: "Call") -> Any:
         ExprVisitor.throw()
 
+    def array(self, expr: "Array") -> Any:
+        ExprVisitor.throw()
+
+    def index(self, expr: "Index") -> Any:
+        ExprVisitor.throw()
+
+    def indexset(self, expr: "IndexSet") -> Any:
+        ExprVisitor.throw()
+
     # pylint: enable=unused-argument
 
 
@@ -116,3 +125,37 @@ class Call(Expr):
 
     def __call__(self, visitor: ExprVisitor) -> Any:
         return visitor.call(self)
+
+
+class Array(Expr):
+    elems: List[Expr]
+
+    def __init__(self, elems: List[Expr]):
+        self.elems = elems
+
+    def __call__(self, visitor: ExprVisitor) -> Any:
+        return visitor.array(self)
+
+
+class Index(Expr):
+    indexee: Expr
+    index: Expr
+
+    def __init__(self, indexee: Expr, index: Expr):
+        self.indexee = indexee
+        self.index = index
+
+    def __call__(self, visitor: ExprVisitor) -> Any:
+        return visitor.index(self)
+
+
+class IndexSet(Expr):
+    index: Index
+    value: Expr
+
+    def __init__(self, index: Index, value: Expr):
+        self.index = index
+        self.value = value
+
+    def __call__(self, visitor: ExprVisitor) -> Any:
+        return visitor.indexset(self)

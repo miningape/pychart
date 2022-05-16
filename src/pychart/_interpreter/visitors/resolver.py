@@ -2,24 +2,30 @@ from typing import Any, Dict, List, Union
 
 from pkg_resources import ResolutionError
 from src.pychart._interpreter.ast_nodes.expression import (
+    Array,
     Assignment,
     Binary,
     Call,
     Expr,
     ExprVisitor,
     Grouping,
+    Index,
+    IndexSet,
     Literal,
     Unary,
     Variable,
 )
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
+    Break,
     Function,
     If,
     Let,
+    Return,
     Stmt,
     StmtVisitor,
     Expression,
+    While,
 )
 from src.pychart._interpreter.token_type.token import Token
 
@@ -111,13 +117,25 @@ class Resolver(ExprVisitor, StmtVisitor):
 
         return None
 
+    def array(self, expr: Array) -> Any:
+        for elem in expr.elems:
+            self.resolve(elem)
+        return None
+
+    def index(self, expr: Index) -> Any:
+        self.resolve(expr.index)
+        self.resolve(expr.indexee)
+        return None
+
+    def indexset(self, expr: IndexSet) -> Any:
+        self.resolve(expr.index)
+        self.resolve(expr.value)
+        return None
+
     # StmtVisitor
     def expression(self, stmt: Expression):
         self.resolve(stmt.expr)
         return None
-
-    # def print(self, stmt: Print):
-    #     self.resolve(stmt.expr)
 
     def block(self, stmt: Block):
         self.open_scope()
@@ -130,6 +148,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         if stmt.initializer:
             self.resolve(stmt.initializer)
         self.define(stmt.name.lexeme)
+        return None
+
+    def return_stmt(self, stmt: Return) -> Any:
+        self.resolve(stmt.expr)
         return None
 
     def function(self, stmt: Function) -> Any:
@@ -148,4 +170,12 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve(stmt.if_body)
         if stmt.else_body:
             self.resolve(stmt.else_body)
+        return None
+
+    def while_stmt(self, stmt: While) -> Any:
+        self.resolve(stmt.while_test)
+        self.resolve(stmt.while_body)
+        return None
+
+    def break_stmt(self, stmt: Break) -> Any:
         return None

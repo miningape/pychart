@@ -10,6 +10,13 @@ interface variableType {
   };
 }
 
+const methodNameMap: Record<string, string> = {
+  if: "if_stmt",
+  while: "while_stmt",
+  break: "break_stmt",
+  return: "return_stmt",
+};
+
 const variables: variableType = {
   Expr: {
     filename: "expression.py",
@@ -45,6 +52,17 @@ const variables: variableType = {
         callee: "Expr",
         arguments: "List[Expr]",
       },
+      Array: {
+        elems: "List[Expr]",
+      },
+      Index: {
+        indexee: "Expr",
+        index: "Expr",
+      },
+      IndexSet: {
+        index: "Index",
+        value: "Expr",
+      },
     },
   },
   Stmt: {
@@ -57,6 +75,9 @@ const variables: variableType = {
     ],
     classes: {
       Expression: {
+        expr: "Expr",
+      },
+      Return: {
         expr: "Expr",
       },
       Let: {
@@ -76,6 +97,11 @@ const variables: variableType = {
         params: "List[Token]",
         body: "List[Stmt]",
       },
+      While: {
+        while_test: "Expr",
+        while_body: "Stmt",
+      },
+      Break: {},
     },
   },
 };
@@ -94,7 +120,7 @@ class ${className}:
 function makeVisitorMethod(baseClassName: string, className: string) {
   let name = className.toLowerCase();
   return `    def ${
-    name === "if" ? "if_stmt" : name
+    methodNameMap[name] ?? name
   }(self, ${baseClassName.toLowerCase()}: "${className}") -> Any:
         ${baseClassName}Visitor.throw()`;
 }
@@ -122,6 +148,19 @@ function makeSubClass(
   args: [string, string][]
 ) {
   let name = className.toLowerCase();
+
+  if (args.length === 0) {
+    return `
+class ${className}(${baseClassName}):
+    def __init__(self):
+        pass
+
+    def __call__(self, visitor: ${baseClassName}Visitor) -> Any:
+        return visitor.${methodNameMap[name] ?? name}(self)
+
+`;
+  }
+
   return `
 class ${className}(${baseClassName}):
 ${args.map(([field, type]) => `    ${field}: ${type}`).join("\n")}
@@ -132,7 +171,7 @@ ${args.map(([field, type]) => `    ${field}: ${type}`).join("\n")}
 ${args.map(([field]) => `        self.${field} = ${field}`).join("\n")}
 
     def __call__(self, visitor: ${baseClassName}Visitor) -> Any:
-        return visitor.${name === "if" ? "if_stmt" : name}(self)
+        return visitor.${methodNameMap[name] ?? name}(self)
 
 `;
 }
