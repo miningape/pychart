@@ -13,6 +13,15 @@ class PychartCallable:
 
     def arity(self, args: List[Any]) -> Tuple[bool, str]:
         raise RuntimeError("Cannot call base callable.")
+    
+    def bytecode_execute(self, interpreter: Any, params: List[Any]):
+        result = []
+        for param in params:
+            val = interpreter.get(param)
+            if isinstance(val, dict):
+                val = list(val)
+            result.append(val)
+        return self(result)
 
 
 class InputFunc(PychartCallable):
