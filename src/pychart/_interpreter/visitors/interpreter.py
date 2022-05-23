@@ -34,7 +34,8 @@ from src.pychart._interpreter.token_type.token_type_enum import TokenType
 
 
 class BreakStatementException(Exception):
-    pass
+    def __init__(self) -> None:
+        super().__init__("Cannot `break` outside of a loop")
 
 
 class ReturnValue(Exception):
@@ -215,7 +216,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return None
 
     def break_stmt(self, stmt: Break) -> Any:
-        raise BreakStatementException("Cannot invoke 'break;' outside of a while loop")
+        raise BreakStatementException()
 
 
 class PychartArray(PychartIndexable):

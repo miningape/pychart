@@ -5,6 +5,7 @@ from src.pychart._interpreter.helpers.callable import (
     PychartCallable,
 )
 from src.pychart._interpreter.native_callable.arrays import ArrayMethods
+from src.pychart._interpreter.native_callable.conversion import StoN
 from src.pychart._interpreter.visitors.interpreter import Interpreter
 from src.pychart._interpreter.visitors.resolver import Resolver
 from src.pychart._interpreter.scanner import Scanner
@@ -13,6 +14,11 @@ from src.pychart._interpreter.pyparser import Parser
 from src.pychart.bytecode.bytecodes import *
 from src.pychart.bytecode.interpreter import *
 from src.pychart.bytecode.printer import *
+from src.pychart.bytecode2.stack_interpreter import (
+    Compiler,
+    StackVM,
+    interpret_stack_code,
+)
 
 native_functions: Dict[str, PychartCallable] = {
     "input": InputFunc(),
@@ -20,12 +26,14 @@ native_functions: Dict[str, PychartCallable] = {
     "push": ArrayMethods.Push(),
     "pop": ArrayMethods.Pop(),
     "len": ArrayMethods.Length(),
+    "ston": StoN(),
 }
+
 
 class BytecodeArrayNatives:
     def push(self, interpreter: Any, params: List[Any]):
         arr_name = interpreter.get_symbol_name_or_value(params[0])
-        arr   = interpreter.get(params[0])
+        arr = interpreter.get(params[0])
         value = interpreter.get(params[1])
 
         arr[len(arr)] = value
@@ -33,15 +41,14 @@ class BytecodeArrayNatives:
 
     def pop(self, interpreter: Any, params: List[Any]):
         arr_name = interpreter.get_symbol_name_or_value(params[0])
-        arr   = interpreter.get(params[0])
+        arr = interpreter.get(params[0])
 
         arr.pop(len(arr) - 1, None)
         interpreter.set(arr_name, arr)
 
     def length(self, interpreter: Any, params: List[Any]):
-        arr   = interpreter.get(params[0])
+        arr = interpreter.get(params[0])
         return len(arr)
-
 
 
 def run_bytecode(filename: str, should_print: bool):
@@ -77,6 +84,25 @@ def run_bytecode(filename: str, should_print: bool):
     interp.push_native("len", array_natives.length)
 
     return interp.execute(bytecodes)
+
+
+def run_bytecode2(source: str):
+    tokens = Scanner(source).get_tokens()
+    statements = Parser(tokens).parse()
+
+    if statements is None:
+        return None
+
+    compiler = Compiler()
+    vm = StackVM()
+
+    for st in statements:
+        st(compiler)
+
+    for i, code in enumerate(compiler.instructions):
+        print(f"{i}: {code}")
+
+    interpret_stack_code(compiler.instructions)
 
 
 def run(source: str):
@@ -123,4 +149,4 @@ def run_prompt():
 
 def run_file(filename: str):
     with open(filename, "r", encoding="utf-8") as contents:
-        run(contents.read())
+        run_bytecode2(contents.read())

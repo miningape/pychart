@@ -49,6 +49,9 @@ class Parser:
         if self.match(TokenType.LET):
             return self.var_declaration()
 
+        if self.match(TokenType.FUNCTION):
+            return self.function()
+
         return self.statement()
 
     def var_declaration(self) -> Stmt:
@@ -63,8 +66,6 @@ class Parser:
         return Let(name, initializer)
 
     def statement(self) -> Stmt:
-        if self.match(TokenType.FUNCTION):
-            return self.function()
         if self.match(TokenType.IF):
             return self.if_statement()
         if self.match(TokenType.LEFT_BRACE):

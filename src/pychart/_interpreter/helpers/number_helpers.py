@@ -7,7 +7,7 @@ def is_number(num: Any):
 
 
 def try_cast_int(num: Any):
-    if isinstance(num, (float)):
+    if isinstance(num, float):
         if int(num) == num:
             return int(num)
 

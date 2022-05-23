@@ -1,0 +1,23 @@
+// Modulus - left % right 
+func mod(left, right) {
+    while ( left >= right ) { left = left - right; }
+
+    return left;
+}
+
+func fizzbuzz(num, modulo) {
+    if ( !modulo(num, 15) ) return "FizzBuzz";
+    if (!modulo(num, 5) ) return "Buzz";
+    if ( !modulo(num, 3) ) return "Fizz";
+    return num;
+}
+
+let iterations = 4;
+//print("------------------------------");
+
+let i = 0;
+while (i < iterations) {
+    fizzbuzz(i, mod);
+
+    i = i + 1;
+}
