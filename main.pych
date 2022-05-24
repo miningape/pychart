@@ -1,16 +1,44 @@
-let a = "Name fuckdace";
+let kyle = 3;
+let deeznut = 0;
+
+func makeCounter() {
+    let counter = 0;
+    func count() {
+      return counter = counter + 1;
+    }
+    
+    return count;
+}
+
+let counter = makeCounter();
+print(counter());  // 1
+print(counter());  // 2
+print(counter());  // 3
 
 {
-  func doA() {
-    print(a);
+  func isGreater(a, b) {
+    if (a > b) return "Yes";
+    
+    return "No";
   }
 
-  
+  func fibonacci(n) {
+    if (n < 2) return n;
 
-  doA();
-  let a = 5;
-  a = 20;
-  doA();
+    return fibonacci(n - 1) + fibonacci(n - 2);
+  }
+
+  func printFib(n) {
+    print(n + " : " + fibonacci(n));
+  }
+
+  func repeat(n, fn) {
+    if (n < 0) return null;
+    repeat(n - 1, fn);
+    fn(n);
+  }
+
+  repeat(0, printFib);
 }
 
 let y = 10;
@@ -26,6 +54,36 @@ if (y = false) {
   print("OOF");
 }
 
-print(y); // Error!!
+while(deeznut < kyle) {
+  print("play ! :) explore :o ! create <3 !");
+  deeznut = deeznut + 1;
+  break;
+}
+let stuff = [1, 2, 3];
 
-//print(x = 10);
+func map(a, fn) {
+  let pos = 0;
+  let array = a;
+
+  while (pos < len(array)) {
+    array[pos] = fn(array[pos]);
+    pos = pos + 1;
+  }
+
+  array;
+}
+
+func square(num) { num * num; }
+
+func t20(num) {
+  num = 20;
+}
+
+print(map(stuff, square));
+print(stuff);
+
+
+
+
+
+

@@ -1,29 +1,48 @@
+from copy import deepcopy
 from typing import Any, Dict, List, Tuple
 from src.pychart._interpreter.ast_nodes.expression import (
+    Array,
     Assignment,
     Binary,
     Call,
     Expr,
     ExprVisitor,
     Grouping,
+    Index,
+    IndexSet,
     Literal,
     Unary,
     Variable,
 )
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
+    Break,
     Expression,
     Function,
     If,
     Let,
-    Print,
+    Return,
     StmtVisitor,
+    While,
 )
 from src.pychart._interpreter.helpers.callable import PychartCallable
 from src.pychart._interpreter.helpers.environment import Environment
+from src.pychart._interpreter.helpers.indexable import PychartIndexable
 from src.pychart._interpreter.helpers.number_helpers import is_number, try_cast_int
 from src.pychart._interpreter.token_type.token import Token
 from src.pychart._interpreter.token_type.token_type_enum import TokenType
+
+
+class BreakStatementException(Exception):
+    pass
+
+
+class ReturnValue(Exception):
+    value: Any
+
+    def __init__(self, value: Any) -> None:
+        super().__init__("Cannot `return` outside of a function")
+        self.value = value
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -127,14 +146,33 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         return callable_fn(args)
 
+    def array(self, expr: Array) -> Any:
+        elems: List[Any] = []
+
+        for item in expr.elems:
+            elems.append(item(self))
+
+        return PychartArray(elems)
+
+    def index(self, expr: Index) -> Any:
+        indexable = PychartIndexable.from_expr(expr.indexee(self))
+        return indexable.get(expr.index(self))
+
+    def indexset(self, expr: IndexSet) -> Any:
+        indexable = PychartIndexable.from_expr(expr.index.indexee(self))
+
+        index = expr.index.index(self)
+        value = expr.value(self)
+
+        return indexable.set(index, value)
+
     # Statement Visitor
     def expression(self, stmt: Expression) -> Any:
         return stmt.expr(self)
 
-    def print(self, stmt: Print) -> Any:
+    def return_stmt(self, stmt: Return) -> Any:
         value = stmt.expr(self)
-        print(value)
-        return None
+        raise ReturnValue(value)
 
     def let(self, stmt: Let) -> Any:
         value = None
@@ -168,6 +206,52 @@ class Interpreter(ExprVisitor, StmtVisitor):
         elif stmt.else_body:
             stmt.else_body(self)
 
+    def while_stmt(self, stmt: While) -> Any:
+        while stmt.while_test(self):
+            try:
+                stmt.while_body(self)
+            except BreakStatementException:
+                break
+        return None
+
+    def break_stmt(self, stmt: Break) -> Any:
+        raise BreakStatementException("Cannot invoke 'break;' outside of a while loop")
+
+
+class PychartArray(PychartIndexable):
+    elems: List[Any]
+
+    def __init__(self, elems: List[Any]) -> None:
+        self.elems = elems
+
+    def set(self, index: Any, value: Any) -> Any:
+        if not isinstance(index, int):
+            raise RuntimeError(f'Array index "{index}" is not an integer')
+
+        if index >= len(self.elems) or index < 0:
+            raise RuntimeError(f'Array index "{index}" is out of bounds')
+
+        self.elems[index] = value
+
+        return value
+
+    def get(self, index: Any):
+        if not isinstance(index, int):
+            raise RuntimeError(f'Array index "{index}" is not an integer')
+
+        if index >= len(self.elems) or index < 0:
+            raise RuntimeError(f'Array index "{index}" is out of bounds')
+
+        return self.elems[index]
+
+    def __str__(self) -> str:
+        string = "["
+
+        for elem in self.elems:
+            string += str(elem) + ", "
+
+        return string + "]"
+
 
 class PychartFunction(PychartCallable):
     definition: Function
@@ -193,16 +277,20 @@ class PychartFunction(PychartCallable):
         # pylint: disable=consider-using-enumerate
         for i in range(len(args)):
             self.interpreter.environment.reverve(
-                self.definition.params[i].lexeme, args[i]
+                self.definition.params[i].lexeme, deepcopy(args[i])
             )
         # pylint: enable=consider-using-enumerate
 
-        last = None
-        for statement in self.definition.body:
-            last = statement(self.interpreter)
+        value = None
+        try:
+            for statement in self.definition.body:
+                statement(self.interpreter)
+        except ReturnValue as ret:
+            value = ret.value
 
         self.interpreter.environment = previous
-        return last
+
+        return value
 
     def arity(self, args: List[Any]) -> Tuple[bool, str]:
         return (
