@@ -329,7 +329,11 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
 
         block  = remove_inner_lists(block)
         self.push(bt.Frame())
-        self.push(bt.While(name, header, temporary, block))
+        if (header != None):
+            self.push(header[0])
+            self.push(bt.While(name, [header[1]], temporary, block))
+        else:
+            self.push(bt.While(name, None, temporary, block))
         self.push(bt.Raze())
 
     def break_stmt(self, stmt: Break) -> Any:
@@ -337,11 +341,23 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
             raise RuntimeError('break outside of loop')
         self.push(bt.Jump(bt.Label('.end_' + self.loop_id)))
 
+    def binary_find_common_type(self, left, right):
+        if isinstance(left, str) and not isinstance(right, str):
+            right = str(right)
+        if isinstance(right, str) and not isinstance(left, str):
+            left = str(left)
+        return (left, right)
+
     def binary(self, expr: Binary) -> Any:
         left = expr.left(self)
         right = expr.right(self)
 
         binary_bytecode = None
+        if isinstance(left, Literal) and isinstance(right, Literal):
+            (l, r) = self.binary_find_common_type(left.value, right.value)
+            left.value  = l
+            right.value = r
+
         if expr.operator.token_type == TokenType.STAR:
             if isinstance(left, Literal) and isinstance(right, Literal):
                 left.value = left.value * right.value
@@ -476,6 +492,9 @@ class BytecodeGenerator(ExprVisitor, StmtVisitor):
         if not isinstance(callee, Variable):
             raise RuntimeError("invalid call expression")
         function_name = callee.name.lexeme
+        if self.get_identifier(function_name) is None:
+            raise RuntimeError(f"no function named {function_name}")
+
         #TODO: make functions have a return type so that we can cascade pseudo typing
         # if not self.get_identifier(function_name).is_function:
         #     raise RuntimeError(f"variable {function_name} does not refer to a function")

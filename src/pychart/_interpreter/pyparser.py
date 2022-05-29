@@ -1,4 +1,5 @@
 from typing import List, Optional
+import sys
 from src.pychart._interpreter.token_type import Token, TokenType
 from src.pychart._interpreter.ast_nodes.statement import (
     Block,
@@ -40,7 +41,7 @@ class Parser:
             while not self.is_at_end():
                 statements.append(self.declaration())
         except RuntimeError as err:
-            print("Error occurred", err)
+            print("Error occurred: " + str(err), file=sys.stderr)
             return None
 
         return statements
@@ -75,6 +76,8 @@ class Parser:
             return self.break_statement()
 
         if self.match(TokenType.RETURN):
+            if self.match(TokenType.SEMICOLON):
+                return Return(Literal(None))
             expr = self.expression()
             self.consume(
                 TokenType.SEMICOLON, "Expected ';' following return expression"
@@ -194,17 +197,17 @@ class Parser:
         return False
 
     def consume(self, type_: TokenType, message: str) -> Token:
+        token = self.peek()
+        if self.current != 0:
+            token = self.previous()
+
         if self.check(type_):
             return self.advance()
 
-        self.error(self.peek(), message)
+        self.error(token, message)
 
     def error(self, token: Token, message: str):
-        if token.token_type == TokenType.EOF:
-            print(f"At end of line: {message}")
-        else:
-            print(f"Line {token.line}, unable to match. {message}")
-        raise RuntimeError()
+        raise RuntimeError(f"Line {token.line}: {message}")
 
     def expression(self) -> Expr:
         return self.assignment()

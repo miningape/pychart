@@ -87,4 +87,4 @@ def While(name: str, header: Optional[List[Bytecode]], condition: Identifier, bl
     if header is None:
         header = []
 
-    return [start_label] + header + [conditional_jump] + block + [jump, end_label]
+    return  [start_label] + header + [conditional_jump] + block + [jump, end_label]

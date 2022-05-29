@@ -42,13 +42,7 @@ class BytecodeArrayNatives:
         arr   = interpreter.get(params[0])
         return len(arr)
 
-
-
-def run_bytecode(filename: str, should_print: bool):
-    source = None
-    with open(filename, "r", encoding="utf-8") as contents:
-        source = contents.read()
-
+def run_as_bytecode(source: str, should_print: bool):
     tokens = Scanner(source).get_tokens()
     statements = Parser(tokens).parse()
 
@@ -78,6 +72,11 @@ def run_bytecode(filename: str, should_print: bool):
 
     return interp.execute(bytecodes)
 
+def run_file_as_bytecode(filename: str, should_print: bool):
+    source = None
+    with open(filename, "r", encoding="utf-8") as contents:
+        source = contents.read()
+    run_as_bytecode(source, should_print)
 
 def run(source: str):
     tokens = Scanner(source).get_tokens()

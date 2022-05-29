@@ -100,8 +100,10 @@ class Scanner:
         )
 
     def __identifier(self):
-        while self.__peek().isalnum():
+        char = self.__peek()
+        while char.isalnum() or char == '_':
             self.__advance()
+            char = self.__peek()
 
         text = self.source[self.start : self.current]
 
