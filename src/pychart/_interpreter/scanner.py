@@ -127,8 +127,10 @@ class Scanner:
         Scans a identifier which is an alphanumeric string of any lengths starting with
         a letter
         """
-        while self.__peek().isalnum():
+        char = self.__peek()
+        while char.isalnum() or char == '_':
             self.__advance()
+            char = self.__peek()
 
         text = self.source[self.start : self.current]
 
