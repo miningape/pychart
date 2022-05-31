@@ -37,12 +37,20 @@ class Scanner:
     }
 
     def __init__(self, program_text: str):
+        """
+        program_text: str - The source text to turn into tokens
+        """
         self.source = program_text
 
     def __is_at_end(self) -> bool:
+        """Checks whether the pointer has reached EOF"""
         return self.current >= len(self.source)
 
     def __advance(self) -> str:
+        """
+        advances the pointer
+        returns the current character
+        """
         char = self.source[self.current]
         self.current += 1
         return char
@@ -52,6 +60,10 @@ class Scanner:
         self.tokens.append(Token(token_type, text, literal, self.line))
 
     def __match(self, char: str) -> bool:
+        """
+        Checks whether the next character is char, and advances the pointer
+        returns True if the next character is char, False otherwise
+        """
         if self.__is_at_end():
             return False
 
@@ -62,17 +74,24 @@ class Scanner:
         return True
 
     def __peek(self) -> str:
+        """
+        returns the following character
+        """
         if self.__is_at_end():
             return "\0"
         return self.source[self.current]
 
     def __peek_next(self) -> str:
+        """ Same as __peek but one simulated advance in the future"""
         if self.current + 1 >= len(self.source):
             return "\0"
 
         return self.source[self.current + 1]
 
     def __string(self):
+        """
+        Scans a string literal which is exactly the characters between two quotation marks (")
+        """
         while self.__peek() != '"' and not self.__is_at_end():
             if self.__peek() == "\n":
                 self.line += 1
@@ -87,6 +106,10 @@ class Scanner:
         self.__add_token(TokenType.STRING, value)
 
     def __number(self):
+        """
+        Scans a number literal (base 10) defined as any alpha string 
+        (including leading zeros and any number of characters) and is stored as a float
+        """
         while self.__peek().isdigit():
             self.__advance()
 
@@ -100,6 +123,10 @@ class Scanner:
         )
 
     def __identifier(self):
+        """
+        Scans a identifier which is an alphanumeric string of any lengths starting with
+        a letter
+        """
         char = self.__peek()
         while char.isalnum() or char == '_':
             self.__advance()
@@ -166,6 +193,7 @@ class Scanner:
                 while self.__peek() != "\n" and not self.__is_at_end():
                     self.__advance()
             else:
+                # Division (Slash)
                 self.__add_token(TokenType.SLASH)
 
         # Whitespace
@@ -186,6 +214,8 @@ class Scanner:
             pass  # Throw error -> unrecognised token
 
     def get_tokens(self) -> List[Token]:
+        """Turns the source text used into a list of tokens"""
+
         if len(self.tokens) != 0:
             self.tokens = []
 
