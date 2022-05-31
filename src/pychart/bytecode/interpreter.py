@@ -1,3 +1,4 @@
+from re import I
 from typing import Callable, Dict, Any, Union, List, Optional
 from src.pychart.bytecode.bytecodes import *
 
@@ -12,7 +13,7 @@ class BinaryEvaluator:
         assert code.code == self.mnemonic
         result_symbol = None
         if code.destination is not None:
-            interpreter.get_symbol_name_or_value(code.destination)
+            result_symbol = interpreter.get_symbol_name_or_value(code.destination)
         left  = interpreter.get(code.left )
         right = interpreter.get(code.right)
 
@@ -38,13 +39,15 @@ class UnaryEvaluator:
         interpreter.current_table[result_symbol] = self.evaluator(value)
 
 class Scope:
+    identifier  : int
     symbol_table: Dict[str, Any]
 
-    def __init__(self, symbol_table: Optional[Dict[str, Any]]):
+    def __init__(self, id: int, symbol_table: Optional[Dict[str, Any]]):
         if symbol_table is not None:
             self.symbol_table = symbol_table
         else:
             self.symbol_table = {}
+        self.identifier = id
 
     def set(self, name: str, value: Any):
         self.symbol_table[name] = value
@@ -69,13 +72,27 @@ class ScopeStack:
 
     def __iter__(self):
         return iter(self.scopes)
+    
+    def find_scope(self, check: Scope):
+        for scope in self.scopes:
+            if scope.identifier == check.identifier:
+                return True
+        return False
+    
+    def contains(self, name: str):
+        for scope in reversed(self.scopes):
+            if scope.contains(name):
+                return True
+        return False
 
     def find_missing_scopes(self, scopes: "ScopeStack"):
         missing_scopes: List[Scope] = []
-        for scope in scopes:
-            if scope not in self.scopes:
+        indices       : List[int] = []
+        for (i, scope) in enumerate(scopes):
+            if not self.find_scope(scope):
                 missing_scopes.append(scope)
-        return missing_scopes
+                indices.append(i)
+        return (missing_scopes, indices)
 
     def get(self, name: str):
         for scope in reversed(self.scopes):
@@ -140,7 +157,8 @@ class BytecodeInterpreter:
             new_stack.push(scope)
         new_stack.push(self.current_scope)
 
-        fun = BytecodeInterpreterFunction(self.pc, code.arguments, new_stack)
+        fun = BytecodeInterpreterFunction(self.scope_id, self.pc, code.arguments, new_stack)
+        self.scope_id += 1
         for arg in fun.arguments:
             fun.scope.set(self.get_symbol_name_or_value(arg), None)
 
@@ -169,20 +187,24 @@ class BytecodeInterpreter:
         for arg in code.arguments:
             arguments.append(self.get(arg))
 
+        (missing_scopes, indices) = self.scope_stack.find_missing_scopes(fun.scope_stack)
         self.push_stack()
-        missing_scopes = self.scope_stack.find_missing_scopes(fun.scope_stack)
         for scope in missing_scopes:
             self.scope_stack.push(scope)
 
-        self.current_scope = fun.scope
+        self.current_scope.symbol_table = fun.scope.symbol_table.copy()
 
         for arg in fun.arguments:
             symbol = self.get_symbol_name_or_value(arg)
             self.set(symbol, arguments.pop(0))
 
         result = self.execute_at(fun.address)
-        for scope in missing_scopes:
-            self.scope_stack.pop()
+
+        new_scopes = []
+        for i in reversed(indices):
+            new_scope = self.scope_stack.pop()
+            fun.scope_stack.scopes[i].symbol_table = dict(new_scope.symbol_table)
+        # fun.scope_stack.update(missing_scopes, new_scopes)
         self.pop_stack()
 
         if save_result:
@@ -203,7 +225,8 @@ class BytecodeInterpreter:
     def execute_frame(self, code):
         assert code.code == Mnemonics.FRAME
         self.scope_stack.push(self.current_scope)
-        self.current_scope = Scope(None)
+        self.current_scope = Scope(self.scope_id, None)
+        self.scope_id += 1
 
     def execute_raze(self, code):
         assert code.code == Mnemonics.RAZE
@@ -328,20 +351,27 @@ class BytecodeInterpreter:
     assert len(execute_byte.keys()) == len(Mnemonics)
     stack = []
     scope_stack   : ScopeStack = ScopeStack(None)
-    current_scope : Scope = Scope(None)
+    current_scope : Scope = Scope(0, None)
     pc = 0
     bytecodes: List[Bytecode] = None
+    scope_id  : int = 0
 
     def push_native(self, name, callback):
         self.current_scope.set(name, BytecodeInterpreterNativeFunction(callback))
 
     def push(self, name, value):
-        self.current_scope.set(name, value)
+        if self.current_scope.contains(name):
+            self.current_scope.set(name, value)
+        elif self.scope_stack.contains(name):
+            self.scope_stack.set(name, value)
+        else:
+            self.current_scope.set(name, value)
 
     def push_stack(self):
         self.stack.append(self.pc)
         self.scope_stack.push(self.current_scope)
-        self.current_scope = Scope(None)
+        self.current_scope = Scope(self.scope_id, None)
+        self.scope_id += 1
 
     def pop_stack(self):
         if len(self.stack) > 0:
@@ -410,10 +440,11 @@ class BytecodeInterpreterNativeFunction:
 
 class BytecodeInterpreterFunction:
     scope_stack : ScopeStack
-    scope       : Scope = Scope(None)
+    scope       : Scope = Scope(0, None)
     arguments: list[Identifier]
     address  : int
-    def __init__(self, address, arguments, scope_stack: ScopeStack):
+    def __init__(self, id, address, arguments, scope_stack: ScopeStack):
+        self.scope.identifier = id
         self.arguments   = arguments
         self.address     = address
         self.scope_stack = scope_stack

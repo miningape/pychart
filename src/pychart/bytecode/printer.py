@@ -129,9 +129,9 @@ class BytecodePrinter:
     def jump_print(self, i, code):
         name = None
         if isinstance(code, JumpIfTrue):
-            name = 'jnez'
-        elif isinstance(code, JumpIfNotTrue):
             name = 'jeqz'
+        elif isinstance(code, JumpIfNotTrue):
+            name = 'jnez'
         out = self.common(i, code, alternative_bytecode=name)
 
         if isinstance(code, (JumpIfTrue, JumpIfNotTrue)):
