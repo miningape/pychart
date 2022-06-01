@@ -116,7 +116,11 @@ def run_prompt():
                 print(result)
 
     except KeyboardInterrupt:
-        print("Keyboard Interrupt")
+        print("\nKeyboard Interrupted")
+        exit()
+        
+    except EOFError:
+        print()
         exit()
 
 
